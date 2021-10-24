@@ -24,31 +24,38 @@ class WebTester:
         self.driver.close()
 
     def open_website(self, url):
+        """ Open a website given a URL """
         self.driver.get(LICHESS_URL)
 
     def click_puzzles(self):
+        """ Click on the Puzzles tab on the top bar menu """
         self.driver.find_element(By.XPATH, "//a[@href='/training']").click()
 
     def hover_puzzles(self):
+        """ Hover over the Puzzles tab on the top bar menu """
         element = self.driver.find_element(By.XPATH, "//a[@href='/training']")
         self.action.move_to_element(element).perform()
 
     def click_puzzles_dashboard(self):
+        """ Click on the Puzzles Dashboard button under the Puzzles tab """
         self.hover_puzzles()
         sub_element = self.driver.find_element(By.XPATH, "//a[@href='/training/dashboard/30']")
         self.action.move_to_element(sub_element).click().perform()
 
     def click_puzzles_streak(self):
+        """ Click on the Puzzles Streak button under the Puzzles tab """
         self.hover_puzzles()
         sub_element = self.driver.find_element(By.XPATH, "//a[@href='/streak']")
         self.action.move_to_element(sub_element).click().perform()
 
     def click_puzzles_storm(self):
+        """ Click on the Puzzles Storm button under the Puzzles tab """
         self.hover_puzzles()
         sub_element = self.driver.find_element(By.XPATH, "//a[@href='/storm']")
         self.action.move_to_element(sub_element).click().perform()
 
     def click_puzzles_racer(self):
+        """ Click on the Puzzles Racer button under the Puzzles tab """
         self.hover_puzzles()
         sub_element = self.driver.find_element(By.XPATH, "//a[@href='/racer']")
         self.action.move_to_element(sub_element).click().perform()
