@@ -9,24 +9,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time  # Allows us to sleep for a certain number of seconds
 
 
-"""
-# Constants
-LICHESS_URL = "https://lichess.org"
-#CHROMEDRIVER_PATH = "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
-SERVICE = Service(CHROMEDRIVER_PATH)
-MAX_WAIT_FOR_SECONDS = 10
-
-# XPATHS
-XPATH_PUZZLES = "//a[@href='/training']"
-XPATH_PUZZLES_DASHBOARD = "//a[@href='/training/dashboard/30']"
-XPATH_PUZZLES_STREAK = "//a[@href='/streak']"
-XPATH_PUZZLES_STORM = "//a[@href='/storm']"
-XPATH_PUZZLES_RACER = "//a[@href='/racer']"
-XPATH_SEARCH_BAR = "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']" \
-    # specify the element by multiple identifiers, separated by '//'
-"""
-
 
 CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
 SERVICE = Service(CHROMEDRIVER_PATH)
@@ -85,9 +67,11 @@ class LichessTester(WebTester):
         "streak"        : "//a[@href='/streak']",
         "storm"         : "//a[@href='/storm']",
         "racer"         : "//a[@href='/racer']",
-        "search_bar"    : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']" \
+        "search_bar"    : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']", \
         # specify the element by multiple identifiers, separated by '//'
+        "moves_table"   : "// * [ @ id = \"main-wrap\"] / main / div[2] / div[2] / div"
     }
+
 
     def __init__(self):
         super().__init__()
@@ -138,10 +122,63 @@ class LichessTester(WebTester):
 
 
 
+    def get_puzzle_moves_table(self):
+        moves_table = self.driver.find_element(By.XPATH, self.xpath.get("moves_table"))
+        #moves_table = self.driver.find_elements(By.XPATH, self.xpath.get("moves_table"))
+        #print(moves_table.find_element(By., "childElementCount"))
+        #print(moves_table.get_property("childElementCount"))
+        #print(moves_table.get_property("childNodes")[1])
+
+        #print(moves_table.get_property("childNodes")[1].get_property("innerText"))
+        #print(moves_table.find_element(By.CLASS_NAME, "hist").get_property("move"))
+        #print(moves_table.find_element(By.CLASS_NAME, "hist").get_attribute("p"))
+        #print(moves_table.find_element(By.CLASS_NAME, "hist").size)
+
+        pgn = ""
+        num_elements = moves_table.get_property("childElementCount")
+        for i in range(0, num_elements, 3):
+            pgn += str(((i//3) + 1)) + ". "
+
+            white_move = moves_table.get_property("childNodes")[i + 1]
+            pgn += white_move.get_property("innerText") + " "
+
+            if (white_move.get_attribute("class") != "hist"):
+                break
+
+            black_move = moves_table.get_property("childNodes")[i + 2]
+            pgn += black_move.get_property("innerText") + " "
+
+        print(pgn)
 
 
+
+
+
+
+
+    def get_puzzle_pgn(self):
+        """ Returns the pgn of the current puzzle """
+        # assert(WE ARE IN THE PUZZLE PAGE)
+
+
+
+
+
+
+# https://lichess.org/analysis
 
 if __name__ == '__main__':
+    lichess_tester = LichessTester()
+    lichess_tester.open_website()
+    time.sleep(1)
+    lichess_tester.click_puzzles()
+    time.sleep(1)
+    lichess_tester.get_puzzle_moves_table()
+    time.sleep(1000)
+
+
+    #lichess_engine = LichessEngine()
+    """
     lichess_tester = LichessTester()
     lichess_tester.open_website()
     time.sleep(2)
@@ -157,6 +194,7 @@ if __name__ == '__main__':
     time.sleep(2)
     lichess_tester.search("Hello, world!")
     time.sleep(10)
+    """
 
 """
 SUBMENU CLICK
@@ -171,3 +209,15 @@ sub_element = self.driver.find_element(By.XPATH, "//a[@href='/racer']")
 # hover over element and click
 action.move_to_element(sub_element).click().perform()
 """
+
+# test if white is current_active
+# break;
+
+# white_move = moves_table.get_property("childNodes")[i+1]
+# black_move = moves_table.get_property("childNodes")[i+2]
+
+# print(black_move.get_attribute("class"))
+
+
+# print(white_move.get_property("innerText"))
+# print(black_move.get_property("innerText"))
