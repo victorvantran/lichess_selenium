@@ -12,7 +12,7 @@ import time  # Allows us to sleep for a certain number of seconds
 
 # Constants
 LICHESS_URL = "https://lichess.org"
-CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
+CHROMEDRIVER_PATH = "D:\\Software Expert\\chromedriver.exe"
 SERVICE = Service(CHROMEDRIVER_PATH)
 MAX_WAIT_FOR_SECONDS = 10
 
@@ -83,6 +83,12 @@ class WebTester:
         self.hover_puzzles()
         self.click(XPATH_PUZZLES_RACER)
 
+    def chrome_window_maximize(self):
+        #options = webdriver.ChromeOptions()
+        #options.add_argument("--start-maximized")
+        #driver = webdriver.ChromeDriver(options)
+        self.driver.maximize_window()
+
     def search(self, string_input):
         """ Search given an input """
         search_bar = self.driver.find_element(By.XPATH, XPATH_SEARCH_BAR)
@@ -108,6 +114,7 @@ class WebTester:
 
 if __name__ == '__main__':
     web_tester = WebTester()
+    web_tester.chrome_window_maximize()
     web_tester.open_website(LICHESS_URL)
     time.sleep(2)
     web_tester.click_puzzles()
