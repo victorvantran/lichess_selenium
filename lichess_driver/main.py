@@ -76,7 +76,8 @@ class LichessTester(WebTester):
         "racer"         : "//a[@href='/racer']",
         "search_bar"    : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']", \
         # specify the element by multiple identifiers, separated by '//'
-        "moves_table"   : "// * [ @ id = \"main-wrap\"] / main / div[2] / div[2] / div"
+        "puzzles_moves_table"    : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
+        "puzzles_board_size"     : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container"
     }
 
 
@@ -130,7 +131,7 @@ class LichessTester(WebTester):
 
     def get_puzzle_pgn(self):
         """ Returns the pgn of a puzzle in string format """
-        moves_table = self.driver.find_element(By.XPATH, self.xpath.get("moves_table"))
+        moves_table = self.driver.find_element(By.XPATH, self.xpath.get("puzzles_moves_table"))
 
         pgn = ""
         num_elements = moves_table.get_property("childElementCount")
@@ -151,6 +152,20 @@ class LichessTester(WebTester):
         return pgn
 
 
+    def get_puzzle_board_pixel_size(self):
+        """ Return the width x height of the board in pixels """
+        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("puzzles_board_size"))
+        return [board_size_element.get_property("clientWidth"), board_size_element.get_property("clientHeight")]
+
+
+    def get_square_pixel_size(self):
+        board_pixel_size = self.get_puzzle_board_pixel_size()
+        return [board_pixel_size[0]/8, board_pixel_size[1]/8]
+
+
+    def get_pieces(self):
+        "Returns a dictionary of position and piece"
+
 
 
 class LichessEngine(WebTester):
@@ -158,7 +173,9 @@ class LichessEngine(WebTester):
     xpath = {
         "suggested_moves"   : "//*[@id=\"main-wrap\"]/main/div[3]/div[2]/div",
         "pgn_bar"           : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]",
-        "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button"
+        "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button",
+        "board"             : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
+        "board_orientation" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]"
     }
 
     def __init__(self):
@@ -180,6 +197,7 @@ class LichessEngine(WebTester):
         self.action.send_keys(pgn)
         self.action.perform()
 
+
     def enter_pgn(self):
         self.click(self.xpath.get("pgn_button"))
 
@@ -191,11 +209,34 @@ class LichessEngine(WebTester):
         # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
 
         num_elements = suggested_moves.get_property("childElementCount")
-        print(num_elements)
         best_move = suggested_moves.get_property("childNodes")[2]
-        print(best_move.get_property("innerText"))
+        return best_move.get_property("innerText")
 
 
+    def update_pgn(self, pgn, move):
+        return (pgn + move)
+
+
+    def get_board(self):
+        return self.driver.find_element(By.XPATH, self.xpath.get("board"))
+
+    def get_board_orientation(self):
+        print(self.driver.find_element(By.XPATH, self.xpath.get("board_orientation")).get_property("classList")[2])
+
+    def get_last_move(self):
+        board = self.get_board()
+        num_elements = board.get_property("childElementCount")
+        last_move = ""
+        last_move_found = 0
+        for i in range(0, num_elements):
+            board_node = board.get_property("childNodes")[i]
+            if (board_node.get_property("className") == "last-move"):
+                last_move = str(board_node.get_property("cgKey")) + last_move
+                last_move_found += 1
+            if (last_move_found == 2):
+                break
+
+        print(last_move)
 
 
 
@@ -210,19 +251,32 @@ if __name__ == '__main__':
     lichess_website_tester.click_puzzles()
     time.sleep(0.2)
     pgn = lichess_website_tester.get_puzzle_pgn()
-
+    time.sleep(1)
+    #lichess_website_tester.get_puzzle_board_pixel_size()
 
 
     lichess_engine = LichessEngine()
     lichess_engine.open_website()
     lichess_engine.enable_engine()
-    time.sleep(2)
+    time.sleep(1)
     lichess_engine.import_pgn(pgn)
-    time.sleep(3)
+    time.sleep(1)
     lichess_engine.enter_pgn()
     time.sleep(2)
-    lichess_engine.get_best_move()
+    best_move = lichess_engine.get_best_move()
+    next_pgn = lichess_engine.update_pgn(pgn, best_move)
+    time.sleep(1)
+    lichess_engine.import_pgn(next_pgn)
+    lichess_engine.enter_pgn()
+    time.sleep(1)
+    lichess_engine.get_last_move()
+    lichess_engine.get_board_orientation()
+
+
+
+
     time.sleep(1000)
+
 
 
     """
@@ -271,3 +325,26 @@ action.move_to_element(sub_element).click().perform()
 
 
 # /html/body/div[1]/main/div[1]/div[3]/cg-container/cg-board
+
+#iterate till find 'black' or 'white'
+
+#https://lichess.org/forum/lichess-feedback/play-by-typing-san-moves-like-e4-nf3-or-qxd6
+
+
+# To translate pieces to position need to consider:
+# board flip position   | # //*[@id="main-wrap"]/main/div[1]/div .get_property("innerText") == black/white
+# board size            |
+# piece position        |
+
+
+
+#1) Every time a higher ranking pieces moves, a capital prefix is apparent
+#2) Pawns have no capital prefix
+#3) If multiple pieces can enter a square, the piece to enter the square is specified by the file and x
+
+
+# Just use last move information
+
+
+# After getting best move, make it. Then record the previous move to get c1n1c2n2
+# After making the best move, wait for computer response. Then record c1n1c2n2
