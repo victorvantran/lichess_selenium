@@ -47,6 +47,13 @@ class WebTester:
         self.action.perform()
 
 
+    def press_key(self, key):
+        """ Press a key """
+        self.action.send_keys(key)
+        self.action.perform()
+
+
+
     def wait_for(self, xpath):
         """ Waits for an element, given by its xpath, to appear on the page before proceeding """
         try:
@@ -121,21 +128,14 @@ class LichessTester(WebTester):
         # self.action.move_to_element(element).click().send_keys(input).send_keys(Keys.RETURN).perform() # one liner
 
 
-
-    def get_puzzle_moves_table(self):
+    def get_puzzle_pgn(self):
+        """ Returns the pgn of a puzzle in string format """
         moves_table = self.driver.find_element(By.XPATH, self.xpath.get("moves_table"))
-        #moves_table = self.driver.find_elements(By.XPATH, self.xpath.get("moves_table"))
-        #print(moves_table.find_element(By., "childElementCount"))
-        #print(moves_table.get_property("childElementCount"))
-        #print(moves_table.get_property("childNodes")[1])
-
-        #print(moves_table.get_property("childNodes")[1].get_property("innerText"))
-        #print(moves_table.find_element(By.CLASS_NAME, "hist").get_property("move"))
-        #print(moves_table.find_element(By.CLASS_NAME, "hist").get_attribute("p"))
-        #print(moves_table.find_element(By.CLASS_NAME, "hist").size)
 
         pgn = ""
         num_elements = moves_table.get_property("childElementCount")
+        # [!] ASSUME THERE IS AT LEAST 1 MOVE MADE IN THE PUZZLE POSITION (NEED AN ASSERTION TO CHECK)
+
         for i in range(0, num_elements, 3):
             pgn += str(((i//3) + 1)) + ". "
 
@@ -148,17 +148,52 @@ class LichessTester(WebTester):
             black_move = moves_table.get_property("childNodes")[i + 2]
             pgn += black_move.get_property("innerText") + " "
 
-        print(pgn)
+        return pgn
 
 
 
 
+class LichessEngine(WebTester):
+    url = "https://lichess.org/analysis"
+    xpath = {
+        "suggested_moves"   : "//*[@id=\"main-wrap\"]/main/div[3]/div[2]/div",
+        "pgn_bar"           : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]",
+        "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button"
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    def open_website(self):
+        """ Open a website given a URL """
+        self.driver.get(self.url)
+
+    def enable_engine(self):
+        self.press_key(Keys.SPACE)
 
 
+    def import_pgn(self, pgn):
+        """ Import pgn to update analysis board """
+        pgn_bar = self.driver.find_element(By.XPATH, self.xpath.get("pgn_bar"))
+        self.action.move_to_element(pgn_bar)
+        self.action.click()
+        self.action.send_keys(pgn)
+        self.action.perform()
 
-    def get_puzzle_pgn(self):
-        """ Returns the pgn of the current puzzle """
-        # assert(WE ARE IN THE PUZZLE PAGE)
+    def enter_pgn(self):
+        self.click(self.xpath.get("pgn_button"))
+
+
+    def get_best_move(self):
+        """ Return the best move in string format """
+        suggested_moves = self.driver.find_element(By.XPATH, self.xpath.get("suggested_moves"))
+        # [!] ASSUME THERE IS AT LEAST 1 MOVE ALWAYS SUGGESTED BY ENGINE (NEED AN ASSERTION TO CHECK)
+        # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
+
+        num_elements = suggested_moves.get_property("childElementCount")
+        print(num_elements)
+        best_move = suggested_moves.get_property("childNodes")[2]
+        print(best_move.get_property("innerText"))
 
 
 
@@ -168,16 +203,40 @@ class LichessTester(WebTester):
 # https://lichess.org/analysis
 
 if __name__ == '__main__':
-    lichess_tester = LichessTester()
-    lichess_tester.open_website()
-    time.sleep(1)
-    lichess_tester.click_puzzles()
-    time.sleep(1)
-    lichess_tester.get_puzzle_moves_table()
+
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(0.2)
+    lichess_website_tester.click_puzzles()
+    time.sleep(0.2)
+    pgn = lichess_website_tester.get_puzzle_pgn()
+
+
+
+    lichess_engine = LichessEngine()
+    lichess_engine.open_website()
+    lichess_engine.enable_engine()
+    time.sleep(2)
+    lichess_engine.import_pgn(pgn)
+    time.sleep(3)
+    lichess_engine.enter_pgn()
+    time.sleep(2)
+    lichess_engine.get_best_move()
     time.sleep(1000)
 
 
-    #lichess_engine = LichessEngine()
+    """
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(0.2)
+    lichess_website_tester.click_puzzles()
+    time.sleep(0.2)
+    lichess_website_tester.get_puzzle_moves_table()
+    time.sleep(1000)
+    """
+
+
+
     """
     lichess_tester = LichessTester()
     lichess_tester.open_website()
@@ -210,14 +269,5 @@ sub_element = self.driver.find_element(By.XPATH, "//a[@href='/racer']")
 action.move_to_element(sub_element).click().perform()
 """
 
-# test if white is current_active
-# break;
 
-# white_move = moves_table.get_property("childNodes")[i+1]
-# black_move = moves_table.get_property("childNodes")[i+2]
-
-# print(black_move.get_attribute("class"))
-
-
-# print(white_move.get_property("innerText"))
-# print(black_move.get_property("innerText"))
+# /html/body/div[1]/main/div[1]/div[3]/cg-container/cg-board
