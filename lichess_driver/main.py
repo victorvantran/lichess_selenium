@@ -11,6 +11,7 @@ import time  # Allows us to sleep for a certain number of seconds
 
 
 CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
+#CHROMEDRIVER_PATH = "D:\\Software Expert\\chromedriver.exe"
 SERVICE = Service(CHROMEDRIVER_PATH)
 MAX_WAIT_FOR_SECONDS = 10
 
@@ -140,14 +141,21 @@ class LichessBoard:
 class LichessTester(WebTester):
     url = "https://lichess.org"
     xpath = {
-        "puzzles"       : "//a[@href='/training']",
-        "dashboard"     : "//a[@href='/training/dashboard/30']",
-        "streak"        : "//a[@href='/streak']",
-        "storm"         : "//a[@href='/storm']",
-        "racer"         : "//a[@href='/racer']",
-        "search_bar"    : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']", \
+        "puzzles"               : "//a[@href='/training']",
+        "dashboard"             : "//a[@href='/training/dashboard/30']",
+        "streak"                : "//a[@href='/streak']",
+        "storm"                 : "//a[@href='/storm']",
+        "racer"                 : "//a[@href='/racer']",
+        "search_bar"            : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
+        "banner"                : "//*[@id=\"top\"]/div[1]/h1/a",
+        "signin"                : "//*[@id=\"top\"]/div[2]/a",
+        "signedin"              : "//*[@id=\"user_tag\"]",
+        "signout"               : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
+        "username_email_form"   : "//*[@id=\"form3-username\"]",
+        "password_form"         : "//*[@id=\"form3-password\"]",   
+        "signin_signin"         : "//*[@id=\"main-wrap\"]/main/form/div[1]/button", \
         # specify the element by multiple identifiers, separated by '//'
-        "puzzles_moves_table"    : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
+        "puzzles_moves_table"   : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
     }
 
     puzzles_board_xpath = {
@@ -193,6 +201,40 @@ class LichessTester(WebTester):
         """ Click on the Puzzles Racer button under the Puzzles tab """
         self.hover_puzzles()
         self.click(self.xpath.get("racer"))
+
+    def click_banner(self):
+        self.hover(self.xpath.get("banner"))
+        self.click(self.xpath.get("banner"))
+
+    def click_signin_button(self):
+        """ Hover and click on the Sign in button """
+        self.hover(self.xpath.get("signin"))
+        self.click(self.xpath.get("signin"))
+
+    def click_signout(self):
+        """ Signout from lichess account """
+        self.hover(self.xpath.get("signedin"))
+        self.click(self.xpath.get("signedin"))
+        time.sleep(0.75) # delay so we can see cascaded menu
+        self.hover(self.xpath.get("signout"))
+        self.click(self.xpath.get("signout"))
+
+    def fill_signin_form(self, string_input1, string_input2):
+        """ Fill out the signin information """
+        id_form = self.driver.find_element(By.XPATH, self.xpath.get("username_email_form"))
+        self.action.move_to_element(id_form)
+        self.action.click()
+        self.action.send_keys(string_input1)
+        self.action.perform()
+        time.sleep(1)   # delay so we can see the input on the id form
+        self.action.send_keys(Keys.TAB)
+        self.action.send_keys(string_input2)
+        self.action.perform()
+        #signin_button = self.driver.find_element(By.XPATH, self.xpath.get("signin_signin"))
+        #self.action.move_to_element(signin_button)
+        self.action.move_to_element(self.driver.find_element(By.XPATH, self.xpath.get("signin_signin")))
+        self.action.click()
+        self.action.perform()
 
     def search(self, string_input):
         """ Search given an input """
@@ -306,6 +348,8 @@ class LichessEngine(WebTester):
 
 if __name__ == '__main__':
 
+    
+
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
     time.sleep(0.2)
@@ -375,6 +419,21 @@ if __name__ == '__main__':
     lichess_tester.search("Hello, world!")
     time.sleep(10)
     """
+
+    """
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(0.2)
+    lichess_website_tester.click_signin_button()
+    time.sleep(0.2)
+    lichess_website_tester.fill_signin_form("Throwawayy123", "123456")
+    time.sleep(3)
+    lichess_website_tester.click_signout()
+    time.sleep(1)
+    lichess_website_tester.click_banner()
+    time.sleep(4)
+    """
+
 
 """
 SUBMENU CLICK
