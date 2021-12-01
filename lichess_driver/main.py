@@ -21,6 +21,10 @@ class WebTester:
 
     def __init__(self):
         self.driver = webdriver.Chrome(service=SERVICE)
+        # Maybe fix the errors after testing beginner videos
+        # options = webdriver.ChromeOptions()
+        # options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        # driver = webdriver.Chrome(options=options)
         self.chrome_window_maximize()
         self.action = ActionChains(self.driver)
 
@@ -148,6 +152,11 @@ class LichessTester(WebTester):
         "racer"                 : "//a[@href='/racer']",
         "search_bar"            : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
         "banner"                : "//*[@id=\"top\"]/div[1]/h1/a",
+        "watch"                 : "//*[@id=\"topnav\"]/section[4]/a",
+        "video_library"         : "//*[@id=\"topnav\"]/section[4]/div/a[5]",
+        "beginner"              : "//*[@id=\"main-wrap\"]/main/aside/div[1]/a[3]/span",
+        "beginner_video1"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[1]",
+        "beginner_video2"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
         "signin"                : "//*[@id=\"top\"]/div[2]/a",
         "signedin"              : "//*[@id=\"user_tag\"]",
         "signout"               : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
@@ -178,6 +187,10 @@ class LichessTester(WebTester):
         """ Hover over the Puzzles tab on the top bar menu """
         self.hover(self.xpath.get("puzzles"))
 
+    def hover_watch(self):
+        """ Hover over the Watch tab on the top bar menu """
+        self.hover(self.xpath.get("watch"))
+
     def click_puzzles(self):
         """ Click on the Puzzles tab on the top bar menu """
         self.click(self.xpath.get("puzzles"))
@@ -201,6 +214,21 @@ class LichessTester(WebTester):
         """ Click on the Puzzles Racer button under the Puzzles tab """
         self.hover_puzzles()
         self.click(self.xpath.get("racer"))
+
+    def click_watch_video_library(self):
+        """ Click on the Video library button under the Watch tab """
+        self.hover_watch()
+        self.click(self.xpath.get("video_library"))
+
+    def click_beginner(self):
+        """ Hover and click on the Beginner button """
+        self.hover(self.xpath.get("beginner"))
+        self.click(self.xpath.get("beginner"))
+
+    def click_beginner_video(self, vid):
+        """ Hover and click on the video """
+        self.hover(self.xpath.get("beginner_video" + str(vid)))
+        self.click(self.xpath.get("beginner_video" + str(vid)))
 
     def click_banner(self):
         self.hover(self.xpath.get("banner"))
@@ -348,8 +376,6 @@ class LichessEngine(WebTester):
 
 if __name__ == '__main__':
 
-    
-
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
     time.sleep(0.2)
@@ -387,6 +413,23 @@ if __name__ == '__main__':
 
 
     time.sleep(1000)
+
+
+    """
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(2)
+    lichess_website_tester.hover_watch()
+    time.sleep(2)
+    lichess_website_tester.click_watch_video_library()
+    time.sleep(2)
+    lichess_website_tester.click_beginner()
+    time.sleep(2)
+    lichess_website_tester.click_beginner_video(1)
+    time.sleep(2)
+    lichess_website_tester.click_banner()
+    time.sleep(2)
+    """
 
 
 
