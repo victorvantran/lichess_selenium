@@ -96,23 +96,28 @@ class LichessBoard:
         return [board_pixel_size[0]/8, board_pixel_size[1]/8]
 
     def get_last_move(self):
-        cg_board = self.get_cg_board()
-        cg_board_properties = cg_board.get_property("childNodes")
-        last_move = ""
-        last_move_found = 0
-        for cell in cg_board_properties:
-            if (cell.get_property("className") == "last-move"):
-                last_move = str(cell.get_property("cgKey")) + last_move
-                last_move_found += 1
-            if (last_move_found == 2):
-                break
+        # Note: A better way would be to use linked-list property of web elements to get the corresponding nodes
+        piece = ""
+        last_move0 = ""
+        last_move1 = ""
+        for key, val in self.state.items():
+            if (str(key) == "last-move0"):
+                print(val)
+                piece = str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
+                last_move0 = str(val.get_property("cgKey"))
+            elif (str(key) == "last-move1"):
+                last_move1 = str(val.get_property("cgKey"))
 
-        return last_move
+        return piece + last_move1 + last_move0
+
+
+
 
     def get_board_state(self):
         return self.state
 
     def update_board_state(self):
+        """ The board state is a dictionary mapping position to web element (square/piece)"""
         self.state.clear()
         cg_board = self.get_cg_board()
         cg_board_properties = cg_board.get_property("childNodes")
@@ -225,6 +230,14 @@ class LichessTester(WebTester):
             pgn += black_move.get_property("innerText") + " "
 
         return pgn
+
+
+    def make_move(self, move):
+        """
+        :param move: string that is a move
+        :return: None
+        """
+        pass
 
 
 class LichessEngine(WebTester):
