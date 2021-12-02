@@ -487,6 +487,7 @@ if __name__ == '__main__':
     lichess_website_tester.click_spotlight_info()
     time.sleep(2)
     lichess_website_tester.click_banner()
+    time.sleep(2)
     """
 
     """ Watch Library Test """
