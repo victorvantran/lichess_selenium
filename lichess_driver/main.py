@@ -10,8 +10,8 @@ import time  # Allows us to sleep for a certain number of seconds
 
 
 
-#CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
-CHROMEDRIVER_PATH = "D:\\Software Expert\\chromedriver.exe"
+CHROMEDRIVER_PATH = "E:\\chromedriver\\chromedriver.exe"
+#CHROMEDRIVER_PATH = "D:\\Software Expert\\chromedriver.exe"
 SERVICE = Service(CHROMEDRIVER_PATH)
 MAX_WAIT_FOR_SECONDS = 10
 
@@ -411,43 +411,43 @@ class LichessEngine(WebTester):
 
 if __name__ == '__main__':
 
-    # lichess_website_tester = LichessTester()
-    # lichess_website_tester.open_website()
-    # time.sleep(0.2)
-    # lichess_website_tester.click_puzzles()
-    # time.sleep(0.2)
-    # pgn = lichess_website_tester.get_puzzle_pgn()
-    # time.sleep(1)
-    # lichess_website_tester.get_board().update_board_state()
-    # print(lichess_website_tester.get_board().get_square_pixel_size())
-    # print(lichess_website_tester.get_board().get_board_orientation())
-    # print(lichess_website_tester.get_board().get_last_move())
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(0.2)
+    lichess_website_tester.click_puzzles()
+    time.sleep(0.2)
+    pgn = lichess_website_tester.get_puzzle_pgn()
+    time.sleep(1)
+    lichess_website_tester.get_board().update_board_state()
+    print(lichess_website_tester.get_board().get_square_pixel_size())
+    print(lichess_website_tester.get_board().get_board_orientation())
+    print(lichess_website_tester.get_board().get_last_move())
 
 
-    # lichess_engine = LichessEngine()
-    # lichess_engine.open_website()
-    # lichess_engine.enable_engine()
-    # time.sleep(1)
-    # lichess_engine.import_pgn(pgn)
-    # time.sleep(1)
-    # lichess_engine.enter_pgn()
-    # time.sleep(2)
-    # best_move = lichess_engine.get_best_move()
-    # next_pgn = lichess_engine.update_pgn(pgn, best_move)
-    # time.sleep(1)
-    # lichess_engine.import_pgn(next_pgn)
-    # lichess_engine.enter_pgn()
-    # time.sleep(1)
-    # lichess_engine.get_board().update_board_state()
-    # print(lichess_engine.get_board().get_square_pixel_size())
-    # print(lichess_engine.get_board().get_board_orientation())
-    # print(lichess_engine.get_board().get_last_move())
-    # print(lichess_engine.get_board().get_board_state())
-    # lichess_engine.test()
+    lichess_engine = LichessEngine()
+    lichess_engine.open_website()
+    lichess_engine.enable_engine()
+    time.sleep(1)
+    lichess_engine.import_pgn(pgn)
+    time.sleep(1)
+    lichess_engine.enter_pgn()
+    time.sleep(2)
+    best_move = lichess_engine.get_best_move()
+    next_pgn = lichess_engine.update_pgn(pgn, best_move)
+    time.sleep(1)
+    lichess_engine.import_pgn(next_pgn)
+    lichess_engine.enter_pgn()
+    time.sleep(1)
+    lichess_engine.get_board().update_board_state()
+    print(lichess_engine.get_board().get_square_pixel_size())
+    print(lichess_engine.get_board().get_board_orientation())
+    print(lichess_engine.get_board().get_last_move())
+    print(lichess_engine.get_board().get_board_state())
+    lichess_engine.test()
 
 
 
-    # time.sleep(1000)
+    time.sleep(1000)
 
 
     """ Spotlighted Tournaments Test """
@@ -516,7 +516,7 @@ if __name__ == '__main__':
     """
 
     """ Signin & Signout Test """
-    
+    """
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
     time.sleep(0.2)
@@ -528,7 +528,7 @@ if __name__ == '__main__':
     time.sleep(1)
     lichess_website_tester.click_banner()
     time.sleep(4)
-    
+    """
 
 
 """
