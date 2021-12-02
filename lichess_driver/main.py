@@ -154,6 +154,7 @@ class LichessTester(WebTester):
         "banner"                : "//*[@id=\"top\"]/div[1]/h1/a",
         "watch"                 : "//*[@id=\"topnav\"]/section[4]/a",
         "video_library"         : "//*[@id=\"topnav\"]/section[4]/div/a[5]",
+        "video_player"          : "//*[@id=\"ytplayer\"]",
         "beginner"              : "//*[@id=\"main-wrap\"]/main/aside/div[1]/a[3]/span",
         "beginner_video1"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[1]",
         "beginner_video2"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
@@ -229,6 +230,9 @@ class LichessTester(WebTester):
         """ Hover and click on the video """
         self.hover(self.xpath.get("beginner_video" + str(vid)))
         self.click(self.xpath.get("beginner_video" + str(vid)))
+
+    def click_video_player(self):
+        self.click(self.xpath.get("video_player"))
 
     def click_banner(self):
         self.hover(self.xpath.get("banner"))
@@ -427,6 +431,10 @@ if __name__ == '__main__':
     time.sleep(2)
     lichess_website_tester.click_beginner_video(1)
     time.sleep(2)
+    lichess_website_tester.click_video_player()
+    time.sleep(5)
+    lichess_website_tester.click_video_player()
+    time.sleep(1)
     lichess_website_tester.click_banner()
     time.sleep(2)
     """
