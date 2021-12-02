@@ -21,7 +21,7 @@ class WebTester:
 
     def __init__(self):
         self.driver = webdriver.Chrome(service=SERVICE)
-        # Maybe fix the errors after testing beginner videos
+        # Maybe fixes the errors of Checking Bluetooth and default browser
         # options = webdriver.ChromeOptions()
         # options.add_experimental_option('excludeSwitches', ['enable-logging'])
         # driver = webdriver.Chrome(options=options)
@@ -145,27 +145,29 @@ class LichessBoard:
 class LichessTester(WebTester):
     url = "https://lichess.org"
     xpath = {
-        "puzzles"               : "//a[@href='/training']",
-        "dashboard"             : "//a[@href='/training/dashboard/30']",
-        "streak"                : "//a[@href='/streak']",
-        "storm"                 : "//a[@href='/storm']",
-        "racer"                 : "//a[@href='/racer']",
-        "search_bar"            : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
-        "banner"                : "//*[@id=\"top\"]/div[1]/h1/a",
-        "watch"                 : "//*[@id=\"topnav\"]/section[4]/a",
-        "video_library"         : "//*[@id=\"topnav\"]/section[4]/div/a[5]",
-        "video_player"          : "//*[@id=\"ytplayer\"]",
-        "beginner"              : "//*[@id=\"main-wrap\"]/main/aside/div[1]/a[3]/span",
-        "beginner_video1"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[1]",
-        "beginner_video2"       : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
-        "signin"                : "//*[@id=\"top\"]/div[2]/a",
-        "signedin"              : "//*[@id=\"user_tag\"]",
-        "signout"               : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
-        "username_email_form"   : "//*[@id=\"form3-username\"]",
-        "password_form"         : "//*[@id=\"form3-password\"]",   
-        "signin_signin"         : "//*[@id=\"main-wrap\"]/main/form/div[1]/button", \
+        "puzzles"                   : "//a[@href='/training']",
+        "dashboard"                 : "//a[@href='/training/dashboard/30']",
+        "streak"                    : "//a[@href='/streak']",
+        "storm"                     : "//a[@href='/storm']",
+        "racer"                     : "//a[@href='/racer']",
+        "search_bar"                : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
+        "banner"                    : "//*[@id=\"top\"]/div[1]/h1/a",
+        "spotlight1"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[1]",
+        "spotlight_info"            : "//*[@id=\"main-wrap\"]/main/aside/div/section[1]/div/p/a",
+        "watch"                     : "//*[@id=\"topnav\"]/section[4]/a",
+        "video_library"             : "//*[@id=\"topnav\"]/section[4]/div/a[5]",
+        "video_player"              : "//*[@id=\"ytplayer\"]",
+        "beginner"                  : "//*[@id=\"main-wrap\"]/main/aside/div[1]/a[3]/span",
+        "beginner_video1"           : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[1]",
+        "beginner_video2"           : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
+        "signin"                    : "//*[@id=\"top\"]/div[2]/a",
+        "signedin"                  : "//*[@id=\"user_tag\"]",
+        "signout"                   : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
+        "username_email_form"       : "//*[@id=\"form3-username\"]",
+        "password_form"             : "//*[@id=\"form3-password\"]",   
+        "signin_signin"             : "//*[@id=\"main-wrap\"]/main/form/div[1]/button", \
         # specify the element by multiple identifiers, separated by '//'
-        "puzzles_moves_table"   : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
+        "puzzles_moves_table"       : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
     }
 
     puzzles_board_xpath = {
@@ -216,6 +218,34 @@ class LichessTester(WebTester):
         self.hover_puzzles()
         self.click(self.xpath.get("racer"))
 
+    def click_spotlight(self, index):
+        """ Click on the Highlighted Tournaments on the left of the webpage """
+        tournaments = (1, 2, 3, 4)
+        if index not in tournaments:
+            return "ERROR: Invalid Highlighted tournament ID input"
+        self.hover(self.xpath.get("spotlight" + str(index)))
+        self.click(self.xpath.get("spotlight" + str(index)))
+
+    def click_spotlight_info(self):
+        """ Click on the Highlighted Tournament's description """
+        self.hover(self.xpath.get("spotlight_info"))
+        self.click(self.xpath.get("spotlight_info"))
+        time.sleep(2)   # delay so we can see the tournament description
+        self.driver.switch_to.window(self.driver.window_handles[1])
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[0])
+
+
+    # def click_tournament_player(self, index):
+    #     """ Click on the tournament participant """
+    #     self.hover(self.xpath.get("tournament_player" + str(index)))
+    #     self.click(self.xpath.get("tournament_player" + str(index)))
+
+    # def click_close_tournament_player(self):
+    #     """ Close the tournament participant's information """
+    #     self.hover(self.xpath.get("close_tournament_player"))
+    #     self.click(self.xpath.get("close_tournament_player"))
+
     def click_watch_video_library(self):
         """ Click on the Video library button under the Watch tab """
         self.hover_watch()
@@ -232,6 +262,7 @@ class LichessTester(WebTester):
         self.click(self.xpath.get("beginner_video" + str(vid)))
 
     def click_video_player(self):
+        """ Click the video player to play video"""
         self.click(self.xpath.get("video_player"))
 
     def click_banner(self):
@@ -417,6 +448,19 @@ if __name__ == '__main__':
 
 
     time.sleep(1000)
+
+
+    """
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(2)
+    lichess_website_tester.click_spotlight(1)
+    time.sleep(2)
+    lichess_website_tester.click_spotlight_info()
+    time.sleep(2)
+    lichess_website_tester.click_banner()
+    time.sleep(2)
+    """
 
 
     """
