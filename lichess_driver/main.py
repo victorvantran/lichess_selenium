@@ -20,11 +20,11 @@ class WebTester:
     action = None
 
     def __init__(self):
-        self.driver = webdriver.Chrome(service=SERVICE)
+        #self.driver = webdriver.Chrome(service=SERVICE)
         # Maybe fixes the errors of Checking Bluetooth and default browser
-        # options = webdriver.ChromeOptions()
-        # options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        # driver = webdriver.Chrome(options=options)
+        self.options = webdriver.ChromeOptions()
+        self.options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.driver = webdriver.Chrome(service=SERVICE, options=self.options)
         self.chrome_window_maximize()
         self.action = ActionChains(self.driver)
 
@@ -162,6 +162,10 @@ class LichessTester(WebTester):
         "beginner_video2"           : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
         "signin"                    : "//*[@id=\"top\"]/div[2]/a",
         "signedin"                  : "//*[@id=\"user_tag\"]",
+        "preferences"               : "//*[@id=\"dasher_app\"]/div/div[1]/a[3]",
+        "kid_mode"                  : "//*[@id=\"main-wrap\"]/main/nav/a[5]",
+        "kid_mode_pwform"           : "//*[@id=\"form3-passwd\"]",
+        "kid_mode_submit"           : "//*[@id=\"main-wrap\"]/main/div/div/form/button",
         "signout"                   : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
         "username_email_form"       : "//*[@id=\"form3-username\"]",
         "password_form"             : "//*[@id=\"form3-password\"]",   
@@ -266,6 +270,7 @@ class LichessTester(WebTester):
         self.click(self.xpath.get("video_player"))
 
     def click_banner(self):
+        """ Click the lichess banner on the top left """
         self.hover(self.xpath.get("banner"))
         self.click(self.xpath.get("banner"))
 
@@ -298,6 +303,28 @@ class LichessTester(WebTester):
         self.action.move_to_element(self.driver.find_element(By.XPATH, self.xpath.get("signin_signin")))
         self.action.click()
         self.action.perform()
+
+    def click_preferences(self):
+        """ Click on preferences on the cascaded menu after clicking the user """
+        self.hover(self.xpath.get("signedin"))
+        self.click(self.xpath.get("signedin"))
+        self.hover(self.xpath.get("preferences"))
+        self.click(self.xpath.get("preferences"))
+
+    def click_kid_mode(self):
+        """ Click Kid mode in preferences """
+        self.hover(self.xpath.get("kid_mode"))
+        self.click(self.xpath.get("kid_mode"))
+
+    def switch_kid_mode(self, string_input):
+        """ Enable or disable kid mode for the account """
+        self.action.move_to_element(self.driver.find_element(By.XPATH, self.xpath.get("kid_mode_pwform")))
+        self.action.click()
+        self.action.send_keys(string_input)
+        self.action.perform()
+        time.sleep(1)
+        self.hover(self.xpath.get("kid_mode_submit"))
+        self.click(self.xpath.get("kid_mode_submit"))
 
     def search(self, string_input):
         """ Search given an input """
@@ -460,7 +487,6 @@ if __name__ == '__main__':
     lichess_website_tester.click_spotlight_info()
     time.sleep(2)
     lichess_website_tester.click_banner()
-    time.sleep(2)
     """
 
     """ Watch Library Test """
@@ -524,6 +550,12 @@ if __name__ == '__main__':
     time.sleep(0.2)
     lichess_website_tester.fill_signin_form("Throwawayy123", "123456")
     time.sleep(3)
+    lichess_website_tester.click_preferences()
+    time.sleep(1)
+    lichess_website_tester.click_kid_mode()
+    time.sleep(1)
+    lichess_website_tester.switch_kid_mode("123456")
+    time.sleep(1)
     lichess_website_tester.click_signout()
     time.sleep(1)
     lichess_website_tester.click_banner()
