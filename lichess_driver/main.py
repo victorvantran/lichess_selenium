@@ -162,6 +162,11 @@ class LichessTester(WebTester):
         "beginner_video2"           : "//*[@id=\"main-wrap\"]/main/div/div[2]/a[2]",
         "signin"                    : "//*[@id=\"top\"]/div[2]/a",
         "signedin"                  : "//*[@id=\"user_tag\"]",
+        "home"                      :"//a[@href='/']",
+        "community"                 :"//a[@href='/player']",
+        "forum"                     :"//a[@href='/forum']",
+        "blog"                      :"//a[@href='/blog/community']",
+        "swag"                      :"//a[@href='https://shop.spreadshirt.com/lichess-org']",
         "preferences"               : "//*[@id=\"dasher_app\"]/div/div[1]/a[3]",
         "kid_mode"                  : "//*[@id=\"main-wrap\"]/main/nav/a[5]",
         "kid_mode_pwform"           : "//*[@id=\"form3-passwd\"]",
@@ -303,6 +308,30 @@ class LichessTester(WebTester):
         self.action.move_to_element(self.driver.find_element(By.XPATH, self.xpath.get("signin_signin")))
         self.action.click()
         self.action.perform()
+
+    def click_home(self):
+        """ Click home page link """
+        self.click(self.xpath.get("home"))
+
+    def hover_community(self):
+        """ Hover over the Community tab on the top bar menu """
+        self.hover(self.xpath.get("community"))
+
+    def click_forum(self):
+        """ Hover and click on the forum button """
+        self.hover_community()
+        self.hover(self.xpath.get("forum"))
+        self.click(self.xpath.get("forum"))
+
+    def click_blog(self):
+        """ Hover and click on the blog button """
+        self.hover_community()
+        self.hover(self.xpath.get("blog"))
+        self.click(self.xpath.get("blog"))
+
+    def click_swag(self):
+        """ click on the swag link """
+        self.click(self.xpath.get("swag"))
 
     def click_preferences(self):
         """ Click on preferences on the cascaded menu after clicking the user """
@@ -560,6 +589,21 @@ if __name__ == '__main__':
     lichess_website_tester.click_signout()
     time.sleep(1)
     lichess_website_tester.click_banner()
+    time.sleep(4)
+    """
+
+    """Community, Forum, Blog, Swag Test"""
+    """
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(2)
+    lichess_website_tester.click_forum()
+    time.sleep(2)
+    lichess_website_tester.click_blog()
+    time.sleep(2)
+    lichess_website_tester.click_home()
+    time.sleep(2)
+    lichess_website_tester.click_swag()
     time.sleep(4)
     """
 
