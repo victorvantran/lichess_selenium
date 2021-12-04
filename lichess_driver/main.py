@@ -20,11 +20,9 @@ class WebTester:
     action = None
 
     def __init__(self):
-        self.driver = webdriver.Chrome(service=SERVICE)
-        # Maybe fixes the errors of Checking Bluetooth and default browser
-        # options = webdriver.ChromeOptions()
-        # options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        # driver = webdriver.Chrome(options=options)
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.driver = webdriver.Chrome(service=SERVICE, options=options)
         self.chrome_window_maximize()
         self.action = ActionChains(self.driver)
 
@@ -41,9 +39,21 @@ class WebTester:
         self.action.move_to_element(element)
         self.action.perform()
 
+    def hover_offset(self, xpath, x, y):
+        """ Hover over an element based on a given xpath """
+        element = self.driver.find_element(By.XPATH, xpath)
+        self.action.move_to_element_with_offset(element, x, y)
+        self.action.perform()
+
     def click_element(self, element):
         """ Click on an element based on a given element """
         self.action.move_to_element(element)
+        self.action.click()
+        self.action.perform()
+
+    def click_element_offset(self, element, x, y):
+        """ Click on an element based on a given element and offset """
+        self.action.move_to_element_with_offset(element, x, y)
         self.action.click()
         self.action.perform()
 
@@ -51,6 +61,11 @@ class WebTester:
         """ Click on an element based on a given xpath """
         element = self.driver.find_element(By.XPATH, xpath)
         self.click_element(element)
+
+    def click_offset(self, xpath, x, y):
+        """ Click on an element based on a given element and offset """
+        element = self.driver.find_element(By.XPATH, xpath)
+        self.click_element_offset(element, x, y)
 
     def press_key(self, key):
         """ Press a key """
@@ -71,13 +86,24 @@ class WebTester:
 class LichessBoard:
     xpath = None
     driver = None
-    state = dict()
+    state = None
+    action = None
 
+    piece_abbreviation = {
+        'pawn': '',
+        'knight': 'N',
+        'bishop': 'B',
+        'rook': 'R',
+        'queen': 'Q',
+        'king': 'K'
+    }
 
-    def __init__(self, driver, xpath):
+    def __init__(self, driver, action, xpath):
         super().__init__()
         self.driver = driver
+        self.action = action
         self.xpath = xpath
+        self.state = dict()
 
     def get_board_orientation(self):
         board_properties = self.driver.find_element(By.XPATH, self.xpath.get("orientation")).get_property("classList")
@@ -93,8 +119,26 @@ class LichessBoard:
 
     def get_board_pixel_size(self):
         """ Return the width x height of the board in pixels """
-        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("pixel_size"))
+        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("container"))
         return [board_size_element.get_property("clientWidth"), board_size_element.get_property("clientHeight")]
+
+    def get_num_ranks(self):
+        """ Return the number of ranks of the chess board (rows) """
+        ranks_element = self.driver.find_element(By.XPATH, self.xpath.get("ranks"))
+        return ranks_element.get_property("childElementCount")
+
+    def get_num_files(self):
+        """ Return the number of files of the chess board (columns) """
+        files_element = self.driver.find_element(By.XPATH, self.xpath.get("files"))
+        return files_element.get_property("childElementCount")
+
+    def get_file_pixel_size(self):
+        """ Return the width of an individual file as an integer using floor division """
+        return self.get_board_pixel_size()[0]//self.get_num_files()
+
+    def get_rank_pixel_size(self):
+        """ Return the height of an individual rank as an integer using floor division """
+        return self.get_board_pixel_size()[1]//self.get_num_ranks()
 
     def get_square_pixel_size(self):
         board_pixel_size = self.get_board_pixel_size()
@@ -107,22 +151,21 @@ class LichessBoard:
         last_move1 = ""
         for key, val in self.state.items():
             if (str(key) == "last-move0"):
-                print(val)
                 piece = str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
-                last_move0 = str(val.get_property("cgKey"))
+                print(str(val.get_property("cgKey")))
+                last_move0 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
             elif (str(key) == "last-move1"):
-                last_move1 = str(val.get_property("cgKey"))
+                print(str(val.get_property("cgKey")))
+                last_move1 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
 
-        return piece + last_move1 + last_move0
-
-
-
+        return [piece, last_move1, last_move0]
 
     def get_board_state(self):
         return self.state
 
     def update_board_state(self):
         """ The board state is a dictionary mapping position to web element (square/piece)"""
+        print(id(self.state))
         self.state.clear()
         cg_board = self.get_cg_board()
         cg_board_properties = cg_board.get_property("childNodes")
@@ -135,8 +178,57 @@ class LichessBoard:
             else:
                 self.state[str(cell.get_property("cgKey"))] = cell
 
+
+    def print_board_state(self):
         for key, value in self.state.items():
             print(key, " : ", value)
+
+
+
+    def make_move(self, start_move, end_move):
+        """
+        :param start_move, end_move: [file, rank]
+        :return: None
+        """
+        orientation = self.get_board_orientation()
+        board_element = self.get_cg_board()
+
+        file_pixel_size = self.get_file_pixel_size()
+        rank_pixel_size = self.get_rank_pixel_size()
+
+        num_files = self.get_num_files()
+        num_ranks = self.get_num_ranks()
+
+        start_file_index = ord(start_move[0]) - ord('a')
+        start_rank_index = start_move[1] - 1
+        end_file_index = ord(end_move[0]) - ord('a')
+        end_rank_index = end_move[1] - 1
+
+        if orientation == "orientation-white":
+            start_file_pixel_offset = file_pixel_size//2 + start_file_index*file_pixel_size
+            start_rank_pixel_offset = rank_pixel_size//2 + (num_ranks - start_rank_index - 1)*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, start_file_pixel_offset, start_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+
+            end_file_pixel_offset = file_pixel_size//2 + end_file_index*file_pixel_size
+            end_rank_pixel_offset = rank_pixel_size//2 + (num_ranks - end_rank_index - 1)*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, end_file_pixel_offset, end_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+            pass
+        elif orientation == "orientation-black":
+            start_file_pixel_offset = file_pixel_size//2 + (num_files - start_file_index - 1)*file_pixel_size
+            start_rank_pixel_offset = rank_pixel_size//2 + start_rank_index*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, start_file_pixel_offset, start_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+
+            end_file_pixel_offset = file_pixel_size//2 + (num_files - end_file_index - 1)*file_pixel_size
+            end_rank_pixel_offset = rank_pixel_size//2 + end_rank_index*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, end_file_pixel_offset, end_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
 
 
 
@@ -171,16 +263,19 @@ class LichessTester(WebTester):
     }
 
     puzzles_board_xpath = {
-        "pixel_size": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
+        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
         "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board"
+        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board",
+        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[1]",
+        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[2]",
+        "success" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/div[1]"
     }
 
     board = None
 
     def __init__(self):
         super().__init__()
-        self.board = LichessBoard(self.driver, self.puzzles_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.puzzles_board_xpath)
 
     def open_website(self):
         """ Open a website given a URL """
@@ -336,13 +431,15 @@ class LichessTester(WebTester):
 
         return pgn
 
-
-    def make_move(self, move):
+    def puzzle_success(self):
+        """ Returns true if the success element of the puzzle page is found,
+         indicating a successful puzzle completion """
+        return len(self.driver.find_elements(By.CLASS_NAME, "complete")) > 0
         """
-        :param move: string that is a move
-        :return: None
+        return len(self.driver.find_elements(By.XPATH, self.puzzles_board_xpath.get("success"))) > 0 and \
+               self.driver.find_element(By.XPATH, self.puzzles_board_xpath.get("success")).get_attribute("className") != None and \
+            self.driver.find_element(By.XPATH, self.puzzles_board_xpath.get("success")).get_property("className") == "complete"
         """
-        pass
 
 
 class LichessEngine(WebTester):
@@ -351,21 +448,24 @@ class LichessEngine(WebTester):
         "suggested_moves"   : "//*[@id=\"main-wrap\"]/main/div[3]/div[2]/div",
         "pgn_bar"           : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]",
         "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button",
+        "pgn_text"          : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/textarea",
         "state"             : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
         "board_orientation" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]"
     }
 
     analysis_board_xpath = {
-        "pixel_size": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
+        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
         "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board"
+        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
+        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[1]",
+        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[2]"
     }
 
     board = None
 
     def __init__(self):
         super().__init__()
-        self.board = LichessBoard(self.driver, self.analysis_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.analysis_board_xpath)
 
     def open_website(self):
         """ Open a website given a URL """
@@ -382,6 +482,17 @@ class LichessEngine(WebTester):
         self.action.send_keys(pgn)
         self.action.perform()
 
+    def update_pgn(self, next_move):
+        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        pgn_text.send_keys(" " + next_move)
+        self.action.perform()
+
+    def get_pgn(self):
+        """ Returns the current pgn in string """
+        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        return pgn_text.get_property("value")
+
+
     def enter_pgn(self):
         self.click(self.xpath.get("pgn_button"))
 
@@ -392,12 +503,15 @@ class LichessEngine(WebTester):
         # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
 
         num_elements = suggested_moves.get_property("childElementCount")
-        best_move = suggested_moves.get_property("childNodes")[2]
-        return best_move.get_property("innerText")
+        best_move_element = suggested_moves.get_property("childNodes")[2]
+        best_move_string = best_move_element.get_property("innerText")
+        return best_move_string
 
-    @staticmethod
-    def update_pgn(pgn, move):
-        return pgn + move
+    def make_best_move(self):
+        best_move = self.get_best_move()
+        lichess_engine.update_pgn(best_move)
+        lichess_engine.enter_pgn()
+        time.sleep(1)
 
     def get_board(self):
         return self.board
@@ -411,19 +525,18 @@ class LichessEngine(WebTester):
 
 if __name__ == '__main__':
 
+    #initiate puzzle board
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
-    time.sleep(0.2)
+    time.sleep(1)
     lichess_website_tester.click_puzzles()
-    time.sleep(0.2)
+    time.sleep(1.5)
     pgn = lichess_website_tester.get_puzzle_pgn()
     time.sleep(1)
     lichess_website_tester.get_board().update_board_state()
-    print(lichess_website_tester.get_board().get_square_pixel_size())
-    print(lichess_website_tester.get_board().get_board_orientation())
-    print(lichess_website_tester.get_board().get_last_move())
+    time.sleep(1)
 
-
+    #initiate analysis board
     lichess_engine = LichessEngine()
     lichess_engine.open_website()
     lichess_engine.enable_engine()
@@ -431,19 +544,44 @@ if __name__ == '__main__':
     lichess_engine.import_pgn(pgn)
     time.sleep(1)
     lichess_engine.enter_pgn()
-    time.sleep(2)
-    best_move = lichess_engine.get_best_move()
-    next_pgn = lichess_engine.update_pgn(pgn, best_move)
+
+    # initial analysis board's moves
     time.sleep(1)
-    lichess_engine.import_pgn(next_pgn)
+    best_move = lichess_engine.get_best_move()
+    time.sleep(1)
+    lichess_engine.update_pgn(best_move)
     lichess_engine.enter_pgn()
     time.sleep(1)
     lichess_engine.get_board().update_board_state()
-    print(lichess_engine.get_board().get_square_pixel_size())
-    print(lichess_engine.get_board().get_board_orientation())
-    print(lichess_engine.get_board().get_last_move())
-    print(lichess_engine.get_board().get_board_state())
-    lichess_engine.test()
+    analysis_last_move = lichess_engine.get_board().get_last_move()
+    print("Analysis last move: ", analysis_last_move)
+
+
+    while (not lichess_website_tester.puzzle_success()):
+        # puzzle board's moves
+        time.sleep(0.5)
+        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2])
+        time.sleep(0.5)
+        lichess_website_tester.get_board().update_board_state()
+        puzzle_last_move = lichess_website_tester.get_board().get_last_move()
+
+        # analysis board's moves
+        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
+        time.sleep(1)
+        lichess_engine.make_best_move()
+        time.sleep(0.5)
+        lichess_engine.get_board().update_board_state()
+        analysis_last_move = lichess_engine.get_board().get_last_move()
+
+
+
+
+
+    print("Puzzle completed!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
+
+
+
+
 
 
 
