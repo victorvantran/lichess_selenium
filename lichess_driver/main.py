@@ -159,7 +159,6 @@ class LichessTester(WebTester):
         "storm"                     : "//a[@href='/storm']",
         "racer"                     : "//a[@href='/racer']",
         "search_bar"                : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
-        "banner"                    : "//*[@id=\"top\"]/div[1]/h1/a",
         "spotlight1"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[1]",
         "spotlight2"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[2]",
         "spotlight3"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[3]",
@@ -291,11 +290,6 @@ class LichessTester(WebTester):
     def click_video_player(self):
         """ Click the video player to play video"""
         self.click(self.xpath.get("video_player"))
-
-    def click_banner(self):
-        """ Click the lichess banner on the top left """
-        self.hover(self.xpath.get("banner"))
-        self.click(self.xpath.get("banner"))
 
     def click_signin_button(self):
         """ Hover and click on the Sign in button """
@@ -531,7 +525,7 @@ if __name__ == '__main__':
     time.sleep(2)
     lichess_website_tester.click_spotlight(1)
     time.sleep(2)
-    lichess_website_tester.click_banner()
+    lichess_website_tester.click_home()
     time.sleep(2)
     """
 
@@ -552,7 +546,7 @@ if __name__ == '__main__':
     time.sleep(5)
     lichess_website_tester.click_video_player()
     time.sleep(1)
-    lichess_website_tester.click_banner()
+    lichess_website_tester.click_home()
     time.sleep(2)
     """
 
@@ -604,7 +598,7 @@ if __name__ == '__main__':
     time.sleep(1)
     lichess_website_tester.click_signout()
     time.sleep(1)
-    lichess_website_tester.click_banner()
+    lichess_website_tester.click_home()
     time.sleep(4)
     """
 
