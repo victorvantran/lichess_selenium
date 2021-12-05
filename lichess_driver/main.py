@@ -250,10 +250,10 @@ class LichessTester(WebTester):
 
     def click_spotlight_info(self):
         """ Click on the Highlighted Tournament's description """
-        if (self.check_exists_by_xpath("spotlight_info")):
+        if (self.check_exists_by_xpath(self.xpath.get("spotlight_info"))):
             self.hover(self.xpath.get("spotlight_info"))
             self.click(self.xpath.get("spotlight_info"))
-            time.sleep(2)   # delay so we can see the tournament description
+            time.sleep(3)   # delay so we can see the tournament description
             self.driver.switch_to.window(self.driver.window_handles[1])
             self.driver.close()
             self.driver.switch_to.window(self.driver.window_handles[0])
