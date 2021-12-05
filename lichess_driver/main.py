@@ -161,6 +161,9 @@ class LichessTester(WebTester):
         "search_bar"                : "//header[@id='top']//div[@class='site-buttons']//div[@id='clinput']//a[@class='link']",
         "banner"                    : "//*[@id=\"top\"]/div[1]/h1/a",
         "spotlight1"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[1]",
+        "spotlight2"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[2]",
+        "spotlight3"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[3]",
+        "spotlight4"                : "//*[@id=\"main-wrap\"]/main/div[3]/div[1]/a[4]",
         "spotlight_info"            : "//*[@id=\"main-wrap\"]/main/aside/div/section[1]/div/p/a",
         "watch"                     : "//*[@id=\"topnav\"]/section[4]/a",
         "video_library"             : "//*[@id=\"topnav\"]/section[4]/div/a[5]",
@@ -240,8 +243,11 @@ class LichessTester(WebTester):
         tournaments = (1, 2, 3, 4)
         if index not in tournaments:
             return "ERROR: Invalid Highlighted tournament ID input"
-        self.hover(self.xpath.get("spotlight" + str(index)))
-        self.click(self.xpath.get("spotlight" + str(index)))
+        else:
+            self.hover(self.xpath.get("spotlight" + str(index)))
+            self.click(self.xpath.get("spotlight" + str(index)))
+            time.sleep(2)   # delay so we can see the tournament page
+            self.click_spotlight_info()
 
     def click_spotlight_info(self):
         """ Click on the Highlighted Tournament's description """
@@ -524,8 +530,6 @@ if __name__ == '__main__':
     lichess_website_tester.open_website()
     time.sleep(2)
     lichess_website_tester.click_spotlight(1)
-    time.sleep(2)
-    lichess_website_tester.click_spotlight_info()
     time.sleep(2)
     lichess_website_tester.click_banner()
     time.sleep(2)
