@@ -6,6 +6,7 @@ from selenium.webdriver.common.action_chains import \
     ActionChains  # Allows us to perform generic actions on modules such as hovering, clicking, etc.
 from selenium.webdriver.support.ui import WebDriverWait # Allows us to stall the driver to wait for a particular element to load
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 import time  # Allows us to sleep for a certain number of seconds
 
 
@@ -56,6 +57,13 @@ class WebTester:
         """ Press a key """
         self.action.send_keys(key)
         self.action.perform()
+
+    def check_exists_by_xpath(self, xpath):
+        try:
+            self.driver.find_element(By.XPATH, xpath)
+        except NoSuchElementException:
+            return False
+        return True
 
     def wait_for(self, xpath):
         """ Waits for an element, given by its xpath, to appear on the page before proceeding """
@@ -237,12 +245,16 @@ class LichessTester(WebTester):
 
     def click_spotlight_info(self):
         """ Click on the Highlighted Tournament's description """
-        self.hover(self.xpath.get("spotlight_info"))
-        self.click(self.xpath.get("spotlight_info"))
-        time.sleep(2)   # delay so we can see the tournament description
-        self.driver.switch_to.window(self.driver.window_handles[1])
-        self.driver.close()
-        self.driver.switch_to.window(self.driver.window_handles[0])
+        if (self.check_exists_by_xpath("spotlight_info")):
+            self.hover(self.xpath.get("spotlight_info"))
+            self.click(self.xpath.get("spotlight_info"))
+            time.sleep(2)   # delay so we can see the tournament description
+            self.driver.switch_to.window(self.driver.window_handles[1])
+            self.driver.close()
+            self.driver.switch_to.window(self.driver.window_handles[0])
+        else:
+            pass
+        
 
 
     # def click_tournament_player(self, index):
