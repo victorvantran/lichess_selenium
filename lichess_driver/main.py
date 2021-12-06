@@ -424,9 +424,11 @@ class LichessEngine(WebTester):
     }
 
     analysis_board_xpath = {
-        "pixel_size": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
+        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
         "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board"
+        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
+        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[1]",
+        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[2]"
     }
 
     board = None
@@ -440,6 +442,7 @@ class LichessEngine(WebTester):
         self.driver.get(self.url)
 
     def enable_engine(self):
+        """ Enable the engine with the hotkey SPACE """
         self.press_key(Keys.SPACE)
 
     def import_pgn(self, pgn):
@@ -450,7 +453,19 @@ class LichessEngine(WebTester):
         self.action.send_keys(pgn)
         self.action.perform()
 
+    def update_pgn(self, next_move):
+        """ Concatinates to the pgn """
+        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        pgn_text.send_keys(" " + next_move)
+        self.action.perform()
+
+    def get_pgn(self):
+        """ Returns the current pgn in string """
+        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        return pgn_text.get_property("value")
+
     def enter_pgn(self):
+        """ Click the blue import button when new text is added to the pgn form """
         self.click(self.xpath.get("pgn_button"))
 
     def get_best_move(self):
@@ -458,40 +473,40 @@ class LichessEngine(WebTester):
         suggested_moves = self.driver.find_element(By.XPATH, self.xpath.get("suggested_moves"))
         # [!] ASSUME THERE IS AT LEAST 1 MOVE ALWAYS SUGGESTED BY ENGINE (NEED AN ASSERTION TO CHECK)
         # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
+        # else error selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="main-wrap"]/main/div[3]/div[2]/div"}
 
         num_elements = suggested_moves.get_property("childElementCount")
-        best_move = suggested_moves.get_property("childNodes")[2]
-        return best_move.get_property("innerText")
+        best_move_element = suggested_moves.get_property("childNodes")[2]
+        best_move_string = best_move_element.get_property("innerText")
+        return best_move_string
 
-    @staticmethod
-    def update_pgn(pgn, move):
-        return pgn + move
+    def make_best_move(self):
+        """ Analysis board determines what the best move is """
+        best_move = self.get_best_move()
+        lichess_engine.update_pgn(best_move)
+        lichess_engine.enter_pgn()
+        time.sleep(1)
 
     def get_board(self):
+        """ Get the current board """
         return self.board
-
-    def test(self):
-        #print(list(self.get_board().get_board_state().values())[-1])
-        cell = list(self.get_board().get_board_state().values())[-1]
-        self.click_element(cell)
 
 # https://lichess.org/analysis
 
 if __name__ == '__main__':
 
+    #initiate puzzle board
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
-    time.sleep(0.2)
+    time.sleep(1)
     lichess_website_tester.click_puzzles()
-    time.sleep(0.2)
+    time.sleep(1.5)
     pgn = lichess_website_tester.get_puzzle_pgn()
     time.sleep(1)
     lichess_website_tester.get_board().update_board_state()
-    print(lichess_website_tester.get_board().get_square_pixel_size())
-    print(lichess_website_tester.get_board().get_board_orientation())
-    print(lichess_website_tester.get_board().get_last_move())
+    time.sleep(1)
 
-
+    #initiate analysis board
     lichess_engine = LichessEngine()
     lichess_engine.open_website()
     lichess_engine.enable_engine()
@@ -499,19 +514,41 @@ if __name__ == '__main__':
     lichess_engine.import_pgn(pgn)
     time.sleep(1)
     lichess_engine.enter_pgn()
-    time.sleep(2)
-    best_move = lichess_engine.get_best_move()
-    next_pgn = lichess_engine.update_pgn(pgn, best_move)
-    time.sleep(1)
-    lichess_engine.import_pgn(next_pgn)
-    lichess_engine.enter_pgn()
+
+    # initial analysis board's moves
+    time.sleep(5)
+    lichess_engine.make_best_move()
     time.sleep(1)
     lichess_engine.get_board().update_board_state()
-    print(lichess_engine.get_board().get_square_pixel_size())
-    print(lichess_engine.get_board().get_board_orientation())
-    print(lichess_engine.get_board().get_last_move())
-    print(lichess_engine.get_board().get_board_state())
-    lichess_engine.test()
+    analysis_last_move = lichess_engine.get_board().get_last_move()
+    print("Analysis last move: ", analysis_last_move)
+
+
+    while (not lichess_website_tester.puzzle_success()):
+        # puzzle board's moves
+        time.sleep(1)
+        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2]) # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position 
+        time.sleep(1) # puzzle makes response move
+        lichess_website_tester.get_board().update_board_state() # update the board
+        puzzle_last_move = lichess_website_tester.get_board().get_last_move() # get the puzzle's last move
+
+        # analysis board's moves
+        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
+        time.sleep(5) # wait for engine to find the best move
+        lichess_engine.make_best_move() # engine makes best move
+        time.sleep(1) # wait for pieces to move
+        lichess_engine.get_board().update_board_state() # update the engine board
+        analysis_last_move = lichess_engine.get_board().get_last_move() # get the engine's last move
+
+
+
+
+
+    print("Puzzle completed!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
+
+
+
+
 
 
 
