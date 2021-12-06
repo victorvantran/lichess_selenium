@@ -149,13 +149,12 @@ class LichessBoard:
         piece = ""
         last_move0 = ""
         last_move1 = ""
+        print(self.state)
         for key, val in self.state.items():
             if (str(key) == "last-move0"):
-                piece = str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
-                print(str(val.get_property("cgKey")))
+                piece = "" #str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
                 last_move0 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
             elif (str(key) == "last-move1"):
-                print(str(val.get_property("cgKey")))
                 last_move1 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
 
         return [piece, last_move1, last_move0]
@@ -172,10 +171,11 @@ class LichessBoard:
         last_move = ""
         last_move_found = 0
         for cell in cg_board_properties:
-            if (cell.get_property("className") == "last-move"):
+            #if (cell.get_property("className") == "last-move"):
+            if (cell.get_attribute("class") == "last-move"):
                 self.state["last-move" + str(last_move_found)] = cell
                 last_move_found += 1
-            else:
+            elif (cell.get_property("localName") == "piece"):
                 self.state[str(cell.get_property("cgKey"))] = cell
 
 
@@ -501,6 +501,7 @@ class LichessEngine(WebTester):
         suggested_moves = self.driver.find_element(By.XPATH, self.xpath.get("suggested_moves"))
         # [!] ASSUME THERE IS AT LEAST 1 MOVE ALWAYS SUGGESTED BY ENGINE (NEED AN ASSERTION TO CHECK)
         # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
+        # else error selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="main-wrap"]/main/div[3]/div[2]/div"}
 
         num_elements = suggested_moves.get_property("childElementCount")
         best_move_element = suggested_moves.get_property("childNodes")[2]
@@ -524,7 +525,6 @@ class LichessEngine(WebTester):
 # https://lichess.org/analysis
 
 if __name__ == '__main__':
-
     #initiate puzzle board
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
@@ -546,11 +546,8 @@ if __name__ == '__main__':
     lichess_engine.enter_pgn()
 
     # initial analysis board's moves
-    time.sleep(1)
-    best_move = lichess_engine.get_best_move()
-    time.sleep(1)
-    lichess_engine.update_pgn(best_move)
-    lichess_engine.enter_pgn()
+    time.sleep(5)
+    lichess_engine.make_best_move()
     time.sleep(1)
     lichess_engine.get_board().update_board_state()
     analysis_last_move = lichess_engine.get_board().get_last_move()
@@ -559,17 +556,17 @@ if __name__ == '__main__':
 
     while (not lichess_website_tester.puzzle_success()):
         # puzzle board's moves
-        time.sleep(0.5)
+        time.sleep(1)
         lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2])
-        time.sleep(0.5)
+        time.sleep(1)
         lichess_website_tester.get_board().update_board_state()
         puzzle_last_move = lichess_website_tester.get_board().get_last_move()
 
         # analysis board's moves
         lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
-        time.sleep(1)
+        time.sleep(5)
         lichess_engine.make_best_move()
-        time.sleep(0.5)
+        time.sleep(1)
         lichess_engine.get_board().update_board_state()
         analysis_last_move = lichess_engine.get_board().get_last_move()
 
