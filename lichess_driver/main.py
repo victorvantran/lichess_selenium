@@ -19,6 +19,7 @@ MAX_WAIT_FOR_SECONDS = 10
 class WebTester:
     driver = None
     action = None
+    window_size = None
 
     def __init__(self):
         """ Initiate Selenium webdriver for Chrome """
@@ -26,7 +27,9 @@ class WebTester:
         self.options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(service=SERVICE, options=self.options)
         self.chrome_window_maximize()
+        self.window_size = self.driver.get_window_size()
         self.action = ActionChains(self.driver)
+
 
     def __del__(self):
         """ Close the driver """
@@ -154,7 +157,7 @@ class LichessBoard:
     def get_square_pixel_size(self):
         """ """
         board_pixel_size = self.get_board_pixel_size()
-        return [board_pixel_size[0]/8, board_pixel_size[1]/8] # [!] div get_num_files, ranks
+        return [board_pixel_size[0]/self.get_num_files(), board_pixel_size[1]/self.get_num_ranks()] # [!] div get_num_files, ranks
 
     def get_last_move(self):
         # Note: A better way would be to use linked-list property of web elements to get the corresponding nodes
@@ -172,6 +175,7 @@ class LichessBoard:
         return [piece, last_move1, last_move0]
 
     def get_board_state(self):
+        """ Return the state of the board (dictionary) """
         return self.state
 
     def update_board_state(self):
@@ -197,7 +201,7 @@ class LichessBoard:
 
     def make_move(self, start_move, end_move):
         """
-        :param start_move, end_move: [file, rank]    a4  a5
+        :param start_move, end_move: [file, rank]
         :return: None
         """
         orientation = self.get_board_orientation()
@@ -554,7 +558,8 @@ class LichessEngine(WebTester):
 
     def enter_pgn(self):
         """ Click the blue import button when new text is added to the pgn form """
-        self.click(self.xpath.get("pgn_button"))
+        pgn_button = self.driver.find_element(By.CSS_SELECTOR, "button[class='button button-thin action text']")
+        self.click_element(pgn_button)
 
     def get_best_move(self):
         """ Return the best move in string format """
@@ -631,14 +636,16 @@ if __name__ == '__main__':
     lichess_website_tester.open_website()
     time.sleep(1)
     lichess_website_tester.click_puzzles()
-
+    lichess_website_tester.driver.set_window_size(lichess_website_tester.window_size['width']/2, lichess_website_tester.window_size['height'])
 
     #initiate analysis webpage
     lichess_engine = LichessEngine()
     lichess_engine.open_website()
+    lichess_engine.driver.set_window_size(lichess_engine.window_size['width']/2, lichess_engine.window_size['height'])
+    lichess_engine.driver.set_window_position(lichess_engine.window_size['width']/2, 0)
     lichess_engine.enable_engine()
 
-    for i in range(1, 10):
+    for i in range(0, 10):
         play(lichess_website_tester, lichess_engine)
 
     """
