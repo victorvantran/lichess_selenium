@@ -432,7 +432,7 @@ class LichessTester(WebTester):
         self.click(self.xpath.get("blog"))
 
     def click_swag(self):
-        """ click on the swag link """
+        """ Click on the swag link """
         self.click(self.xpath.get("swag"))
 
     def click_preferences(self):
@@ -580,7 +580,6 @@ class LichessEngine(WebTester):
         best_move = self.get_best_move()
         lichess_engine.update_pgn(best_move)
         lichess_engine.enter_pgn()
-        time.sleep(1)
 
     def get_board(self):
         """ Get the current board """
@@ -610,7 +609,7 @@ def play(lichess_website_tester, lichess_engine):
 
     while (not lichess_website_tester.puzzle_success()):
         # puzzle board's moves
-        time.sleep(1)
+        time.sleep(0.1)
         lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2]) # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position
         time.sleep(1) # puzzle makes response move
         lichess_website_tester.get_board().update_board_state() # update the board
@@ -621,7 +620,7 @@ def play(lichess_website_tester, lichess_engine):
 
         # analysis board's moves
         lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
-        time.sleep(5) # wait for engine to find the best move
+        time.sleep(1) # wait for engine to find the best move
         lichess_engine.make_best_move() # engine makes best move
         time.sleep(1) # wait for pieces to move
         lichess_engine.get_board().update_board_state() # update the engine board
@@ -648,7 +647,7 @@ if __name__ == '__main__':
     lichess_engine.driver.set_window_position(lichess_engine.window_size['width']/2, 0)
     lichess_engine.enable_engine()
 
-    for i in range(0, 10):
+    for _ in range(0, 1000):
         play(lichess_website_tester, lichess_engine)
 
 
