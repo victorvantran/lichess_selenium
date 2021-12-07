@@ -1,6 +1,10 @@
 # lichess_selenium
 Automated testing of lichess.com using Selenium
 
+Christopher Ta				cta002@csu.fullerton.edu
+Brian Tan 				    brian388@csu.fullerton.edu
+Victor Tran				    victorvantran@csu.fullerton.edu
+
 CASE Tools
 • Selenium Chrome Webdriver
 • Python 3
