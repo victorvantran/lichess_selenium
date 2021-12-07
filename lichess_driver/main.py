@@ -98,7 +98,7 @@ class WebTester:
 
 
 class LichessBoard:
-    xpath = None
+    css = None
     driver = None
     state = None
     action = None
@@ -112,15 +112,15 @@ class LichessBoard:
         'king': 'K'
     }
 
-    def __init__(self, driver, action, xpath):
+    def __init__(self, driver, action, css):
         super().__init__()
         self.driver = driver
         self.action = action
-        self.xpath = xpath
+        self.css = css
         self.state = dict()
 
     def get_board_orientation(self):
-        board_properties = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("orientation")).get_property("classList")
+        board_properties = self.driver.find_element(By.CSS_SELECTOR, self.css.get("orientation")).get_property("classList")
         for property in board_properties:
             if str(property) == "orientation-white" or str(property) == "orientation-black":
                 return str(property)
@@ -129,24 +129,21 @@ class LichessBoard:
         return "fail"
 
     def get_cg_board(self):
-        return self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("state"))
+        return self.driver.find_element(By.CSS_SELECTOR, self.css.get("state"))
 
     def get_board_pixel_size(self):
         """ Return the width x height of the board in pixels """
-        #board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("container"))
-        board_size_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("container"))
+        board_size_element = self.driver.find_element(By.CSS_SELECTOR, self.css.get("container"))
         return [board_size_element.get_property("clientWidth"), board_size_element.get_property("clientHeight")]
 
     def get_num_ranks(self):
         """ Return the number of ranks of the chess board (rows) """
-        #ranks_element = self.driver.find_element(By.XPATH, self.xpath.get("ranks"))
-        ranks_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("ranks"))
+        ranks_element = self.driver.find_element(By.CSS_SELECTOR, self.css.get("ranks"))
         return ranks_element.get_property("childElementCount")
 
     def get_num_files(self):
         """ Return the number of files of the chess board (columns) """
-        #files_element = self.driver.find_element(By.XPATH, self.xpath.get("files"))
-        files_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("files"))
+        files_element = self.driver.find_element(By.CSS_SELECTOR, self.css.get("files"))
         return files_element.get_property("childElementCount")
 
     def get_file_pixel_size(self):
@@ -160,7 +157,7 @@ class LichessBoard:
     def get_square_pixel_size(self):
         """ """
         board_pixel_size = self.get_board_pixel_size()
-        return [board_pixel_size[0]/self.get_num_files(), board_pixel_size[1]/self.get_num_ranks()] # [!] div get_num_files, ranks
+        return [board_pixel_size[0]/self.get_num_files(), board_pixel_size[1]/self.get_num_ranks()]
 
     def get_last_move(self):
         # Note: A better way would be to use linked-list property of web elements to get the corresponding nodes
@@ -511,30 +508,22 @@ class LichessTester(WebTester):
 
 class LichessEngine(WebTester):
     url = "https://lichess.org/analysis"
-    xpath = {
-        "suggested_moves"   : "//*[@id=\"main-wrap\"]/main/div[3]/div[2]/div",
-        "pgn_bar"           : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]",
-        "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button",
-        "pgn_text"          : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/textarea",
-        "state"             : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
-        "board_orientation" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]"
+
+    css = {
+        "suggested_moves": "div[class=\"pv pv--nowrap\"]",
+        "pgn": "div[class=\"pgn\"]",
+        "pgn_button": "button[class='button button-thin action text']",
+        "pgn_text": "textarea[class=\"copyable autoselect\"]"
+        #"state" : "cg-board",
     }
-
-
-
-
 
     analysis_board_ccs = {
-        "container" : "cg-container",
-        #"orientation" : "div[class*=\"cg-wrap cgv1 orientation-\"]",
+        "container": "cg-container",
         "orientation": "div[class*=\"cg-wrap\"]",
         "state": "cg-board",
-        "ranks" : "coords[class*=\"ranks\"]",
-        "files" : "coords[class*=\"files\"]"
+        "ranks": "coords[class*=\"ranks\"]",
+        "files": "coords[class*=\"files\"]"
     }
-
-
-
 
     board = None
 
@@ -550,34 +539,33 @@ class LichessEngine(WebTester):
         """ Enable the engine with the hotkey SPACE """
         self.press_key(Keys.SPACE)
 
-    def import_pgn(self, pgn):
+    def import_pgn(self, pgn_string):
         """ Import pgn to update analysis board """
-        #pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
-        pgn_bar = self.driver.find_element(By.CLASS_NAME, "pgn")
-        self.action.move_to_element(pgn_bar)
+        pgn = self.driver.find_element(By.CSS_SELECTOR, self.css.get("pgn"))
+        self.action.move_to_element(pgn)
         self.action.click()
-        self.action.send_keys(pgn)
+        self.action.send_keys(pgn_string)
         self.action.perform()
 
     def update_pgn(self, next_move):
         """ Concatenate to the pgn """
-        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        pgn_text = self.driver.find_element(By.CSS_SELECTOR, self.css.get("pgn_text"))
         pgn_text.send_keys(" " + next_move)
         self.action.perform()
 
     def get_pgn(self):
         """ Returns the current pgn in string """
-        pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        pgn_text = self.driver.find_element(By.CSS_SELECTOR, self.css.get("pgn_text"))
         return pgn_text.get_property("value")
 
     def enter_pgn(self):
         """ Click the blue import button when new text is added to the pgn form """
-        pgn_button = self.driver.find_element(By.CSS_SELECTOR, "button[class='button button-thin action text']")
+        pgn_button = self.driver.find_element(By.CSS_SELECTOR, self.css.get("pgn_button"))
         self.click_element(pgn_button)
 
     def get_best_move(self):
         """ Return the best move in string format """
-        suggested_moves = self.driver.find_element(By.XPATH, self.xpath.get("suggested_moves"))
+        suggested_moves = self.driver.find_element(By.CSS_SELECTOR, self.css.get("suggested_moves"))
         # [!] ASSUME THERE IS AT LEAST 1 MOVE ALWAYS SUGGESTED BY ENGINE (NEED AN ASSERTION TO CHECK)
         # NEED TO DELAY 2 SECONDS FOR ENGINE TO CALCULATE
         # else error selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"xpath","selector":"//*[@id="main-wrap"]/main/div[3]/div[2]/div"}
@@ -662,92 +650,6 @@ if __name__ == '__main__':
     for i in range(0, 10):
         play(lichess_website_tester, lichess_engine)
 
-    """
-    time.sleep(1.5)
-    pgn = lichess_website_tester.get_puzzle_pgn()
-    time.sleep(1)
-    lichess_website_tester.get_board().update_board_state()
-    time.sleep(1)
-    lichess_engine.import_pgn(pgn)
-    time.sleep(1)
-    lichess_engine.enter_pgn()
-
-    # initial analysis board's moves
-    time.sleep(5)
-    lichess_engine.make_best_move()
-    time.sleep(1)
-    lichess_engine.get_board().update_board_state()
-    analysis_last_move = lichess_engine.get_board().get_last_move()
-    print("Analysis last move: ", analysis_last_move)
-
-
-    while (not lichess_website_tester.puzzle_success()):
-        # puzzle board's moves
-        time.sleep(1)
-        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2]) # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position 
-        time.sleep(1) # puzzle makes response move
-        lichess_website_tester.get_board().update_board_state() # update the board
-        puzzle_last_move = lichess_website_tester.get_board().get_last_move() # get the puzzle's last move
-
-        if (lichess_website_tester.puzzle_success()):
-            break
-
-        # analysis board's moves
-        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
-        time.sleep(5) # wait for engine to find the best move
-        lichess_engine.make_best_move() # engine makes best move
-        time.sleep(1) # wait for pieces to move
-        lichess_engine.get_board().update_board_state() # update the engine board
-        analysis_last_move = lichess_engine.get_board().get_last_move() # get the engine's last move
-    """
-
-
-    """
-
-    print("Puzzle completed1!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
-    lichess_website_tester.click_puzzle_continue()
-
-    time.sleep(1.5)
-    pgn = lichess_website_tester.get_puzzle_pgn()
-    time.sleep(1)
-    lichess_website_tester.get_board().update_board_state()
-    time.sleep(1)
-
-    lichess_engine.import_pgn(pgn)
-    time.sleep(1)
-    lichess_engine.enter_pgn()
-
-    # initial analysis board's moves
-    time.sleep(5)
-    lichess_engine.make_best_move()
-    time.sleep(1)
-    lichess_engine.get_board().update_board_state()
-    analysis_last_move = lichess_engine.get_board().get_last_move()
-    print("Analysis last move: ", analysis_last_move)
-
-    while (not lichess_website_tester.puzzle_success()):
-        # puzzle board's moves
-        time.sleep(1)
-        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[
-            2])  # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position
-        time.sleep(1)  # puzzle makes response move
-        lichess_website_tester.get_board().update_board_state()  # update the board
-        puzzle_last_move = lichess_website_tester.get_board().get_last_move()  # get the puzzle's last move
-
-        if (lichess_website_tester.puzzle_success()):
-            break
-
-        # analysis board's moves
-        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
-        time.sleep(5)  # wait for engine to find the best move
-        lichess_engine.make_best_move()  # engine makes best move
-        time.sleep(1)  # wait for pieces to move
-        lichess_engine.get_board().update_board_state()  # update the engine board
-        analysis_last_move = lichess_engine.get_board().get_last_move()  # get the engine's last move
-
-    print("Puzzle completed2!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
-    """
-
 
     time.sleep(1000)
 
@@ -785,18 +687,10 @@ if __name__ == '__main__':
     """
 
 
-    """
-    lichess_website_tester = LichessTester()
-    lichess_website_tester.open_website()
-    time.sleep(0.2)
-    lichess_website_tester.click_puzzles()
-    time.sleep(0.2)
-    lichess_website_tester.get_puzzle_moves_table()
-    time.sleep(1000)
-    """
 
 
 
+    """ Search bar """
     """
     lichess_tester = LichessTester()
     lichess_tester.open_website()
