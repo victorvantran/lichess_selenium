@@ -120,7 +120,7 @@ class LichessBoard:
         self.state = dict()
 
     def get_board_orientation(self):
-        board_properties = self.driver.find_element(By.XPATH, self.xpath.get("orientation")).get_property("classList")
+        board_properties = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("orientation")).get_property("classList")
         for property in board_properties:
             if str(property) == "orientation-white" or str(property) == "orientation-black":
                 return str(property)
@@ -129,21 +129,24 @@ class LichessBoard:
         return "fail"
 
     def get_cg_board(self):
-        return self.driver.find_element(By.XPATH, self.xpath.get("state"))
+        return self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("state"))
 
     def get_board_pixel_size(self):
         """ Return the width x height of the board in pixels """
-        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("container"))
+        #board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("container"))
+        board_size_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("container"))
         return [board_size_element.get_property("clientWidth"), board_size_element.get_property("clientHeight")]
 
     def get_num_ranks(self):
         """ Return the number of ranks of the chess board (rows) """
-        ranks_element = self.driver.find_element(By.XPATH, self.xpath.get("ranks"))
+        #ranks_element = self.driver.find_element(By.XPATH, self.xpath.get("ranks"))
+        ranks_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("ranks"))
         return ranks_element.get_property("childElementCount")
 
     def get_num_files(self):
         """ Return the number of files of the chess board (columns) """
-        files_element = self.driver.find_element(By.XPATH, self.xpath.get("files"))
+        #files_element = self.driver.find_element(By.XPATH, self.xpath.get("files"))
+        files_element = self.driver.find_element(By.CSS_SELECTOR, self.xpath.get("files"))
         return files_element.get_property("childElementCount")
 
     def get_file_pixel_size(self):
@@ -284,14 +287,16 @@ class LichessTester(WebTester):
         "puzzles_moves_table"       : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
     }
 
-    puzzles_board_xpath = {
-        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
-        "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board",
-        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[1]",
-        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[2]",
-        "success" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/div[1]",
-        "continue" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/a"
+
+    puzzles_board_css = {
+        "container" : "cg-container",
+        #"orientation": "div[class*=\"cg-wrap orientation-\"]",
+        "orientation": "div[class*=\"cg-wrap\"]",
+        "state": "cg-board",
+        "ranks" : "coords[class*=\"ranks\"]",
+        "files" : "coords[class*=\"files\"]",
+        "complete" : "div[class=\"complete\"]",
+        "continue" : "a[class=\"continue\"]"
     }
 
     board = None
@@ -299,7 +304,7 @@ class LichessTester(WebTester):
     def __init__(self):
         """ Initiate LichessTester and setup the board """
         super().__init__()
-        self.board = LichessBoard(self.driver, self.action, self.puzzles_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.puzzles_board_css)
 
     def open_website(self):
         """ Open a website given a URL """
@@ -496,11 +501,12 @@ class LichessTester(WebTester):
     def puzzle_success(self):
         """ Returns true if the success element of the puzzle page is found,
          indicating a successful puzzle completion """
-        return len(self.driver.find_elements(By.CLASS_NAME, "complete")) > 0
+        #return len(self.driver.find_elements(By.CLASS_NAME, "complete")) > 0
+        return len(self.driver.find_elements(By.CSS_SELECTOR, self.puzzles_board_css["complete"])) > 0
 
     def click_puzzle_continue(self):
         """ Click on the continue puzzle to continue to the next puzzle """
-        self.click(self.puzzles_board_xpath["continue"])
+        self.click_element(self.driver.find_element(By.CSS_SELECTOR, self.puzzles_board_css["continue"]))
 
 
 class LichessEngine(WebTester):
@@ -514,19 +520,27 @@ class LichessEngine(WebTester):
         "board_orientation" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]"
     }
 
-    analysis_board_xpath = {
-        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
-        "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
-        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[1]",
-        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/coords[2]"
+
+
+
+
+    analysis_board_ccs = {
+        "container" : "cg-container",
+        #"orientation" : "div[class*=\"cg-wrap cgv1 orientation-\"]",
+        "orientation": "div[class*=\"cg-wrap\"]",
+        "state": "cg-board",
+        "ranks" : "coords[class*=\"ranks\"]",
+        "files" : "coords[class*=\"files\"]"
     }
+
+
+
 
     board = None
 
     def __init__(self):
         super().__init__()
-        self.board = LichessBoard(self.driver, self.action, self.analysis_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.analysis_board_ccs)
 
     def open_website(self):
         """ Open a website given a URL """
