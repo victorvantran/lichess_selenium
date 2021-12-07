@@ -286,7 +286,8 @@ class LichessTester(WebTester):
         "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board",
         "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[1]",
         "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[2]",
-        "success" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/div[1]"
+        "success" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/div[1]",
+        "continue" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/a"
     }
 
     board = None
@@ -493,6 +494,10 @@ class LichessTester(WebTester):
          indicating a successful puzzle completion """
         return len(self.driver.find_elements(By.CLASS_NAME, "complete")) > 0
 
+    def click_puzzle_continue(self):
+        """ Click on the continue puzzle to continue to the next puzzle """
+        self.click(self.puzzles_board_xpath["continue"])
+
 
 class LichessEngine(WebTester):
     url = "https://lichess.org/analysis"
@@ -529,7 +534,8 @@ class LichessEngine(WebTester):
 
     def import_pgn(self, pgn):
         """ Import pgn to update analysis board """
-        pgn_bar = self.driver.find_element(By.XPATH, self.xpath.get("pgn_bar"))
+        #pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
+        pgn_bar = self.driver.find_element(By.CLASS_NAME, "pgn")
         self.action.move_to_element(pgn_bar)
         self.action.click()
         self.action.send_keys(pgn)
@@ -575,23 +581,71 @@ class LichessEngine(WebTester):
 
 # https://lichess.org/analysis
 
-if __name__ == '__main__':
 
-    #initiate puzzle board
-    lichess_website_tester = LichessTester()
-    lichess_website_tester.open_website()
-    time.sleep(1)
-    lichess_website_tester.click_puzzles()
+def play(lichess_website_tester, lichess_engine):
     time.sleep(1.5)
     pgn = lichess_website_tester.get_puzzle_pgn()
     time.sleep(1)
     lichess_website_tester.get_board().update_board_state()
     time.sleep(1)
+    lichess_engine.import_pgn(pgn)
+    time.sleep(1)
+    lichess_engine.enter_pgn()
 
-    #initiate analysis board
+    # initial analysis board's moves
+    time.sleep(5)
+    lichess_engine.make_best_move()
+    time.sleep(1)
+    lichess_engine.get_board().update_board_state()
+    analysis_last_move = lichess_engine.get_board().get_last_move()
+    print("Analysis last move: ", analysis_last_move)
+
+
+    while (not lichess_website_tester.puzzle_success()):
+        # puzzle board's moves
+        time.sleep(1)
+        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[2]) # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position
+        time.sleep(1) # puzzle makes response move
+        lichess_website_tester.get_board().update_board_state() # update the board
+        puzzle_last_move = lichess_website_tester.get_board().get_last_move() # get the puzzle's last move
+
+        if (lichess_website_tester.puzzle_success()):
+            break
+
+        # analysis board's moves
+        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
+        time.sleep(5) # wait for engine to find the best move
+        lichess_engine.make_best_move() # engine makes best move
+        time.sleep(1) # wait for pieces to move
+        lichess_engine.get_board().update_board_state() # update the engine board
+        analysis_last_move = lichess_engine.get_board().get_last_move() # get the engine's last move
+
+    lichess_website_tester.click_puzzle_continue()
+
+
+
+if __name__ == '__main__':
+
+    #initiate puzzle webpage
+    lichess_website_tester = LichessTester()
+    lichess_website_tester.open_website()
+    time.sleep(1)
+    lichess_website_tester.click_puzzles()
+
+
+    #initiate analysis webpage
     lichess_engine = LichessEngine()
     lichess_engine.open_website()
     lichess_engine.enable_engine()
+
+    for i in range(1, 10):
+        play(lichess_website_tester, lichess_engine)
+
+    """
+    time.sleep(1.5)
+    pgn = lichess_website_tester.get_puzzle_pgn()
+    time.sleep(1)
+    lichess_website_tester.get_board().update_board_state()
     time.sleep(1)
     lichess_engine.import_pgn(pgn)
     time.sleep(1)
@@ -614,6 +668,9 @@ if __name__ == '__main__':
         lichess_website_tester.get_board().update_board_state() # update the board
         puzzle_last_move = lichess_website_tester.get_board().get_last_move() # get the puzzle's last move
 
+        if (lichess_website_tester.puzzle_success()):
+            break
+
         # analysis board's moves
         lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
         time.sleep(5) # wait for engine to find the best move
@@ -621,17 +678,54 @@ if __name__ == '__main__':
         time.sleep(1) # wait for pieces to move
         lichess_engine.get_board().update_board_state() # update the engine board
         analysis_last_move = lichess_engine.get_board().get_last_move() # get the engine's last move
+    """
 
 
+    """
 
+    print("Puzzle completed1!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
+    lichess_website_tester.click_puzzle_continue()
 
+    time.sleep(1.5)
+    pgn = lichess_website_tester.get_puzzle_pgn()
+    time.sleep(1)
+    lichess_website_tester.get_board().update_board_state()
+    time.sleep(1)
 
-    print("Puzzle completed!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
+    lichess_engine.import_pgn(pgn)
+    time.sleep(1)
+    lichess_engine.enter_pgn()
 
+    # initial analysis board's moves
+    time.sleep(5)
+    lichess_engine.make_best_move()
+    time.sleep(1)
+    lichess_engine.get_board().update_board_state()
+    analysis_last_move = lichess_engine.get_board().get_last_move()
+    print("Analysis last move: ", analysis_last_move)
 
+    while (not lichess_website_tester.puzzle_success()):
+        # puzzle board's moves
+        time.sleep(1)
+        lichess_website_tester.get_board().make_move(analysis_last_move[1], analysis_last_move[
+            2])  # analysis_last_move[1] is source position & analysis_last_move[2] is terminal position
+        time.sleep(1)  # puzzle makes response move
+        lichess_website_tester.get_board().update_board_state()  # update the board
+        puzzle_last_move = lichess_website_tester.get_board().get_last_move()  # get the puzzle's last move
 
+        if (lichess_website_tester.puzzle_success()):
+            break
 
+        # analysis board's moves
+        lichess_engine.get_board().make_move(puzzle_last_move[1], puzzle_last_move[2])
+        time.sleep(5)  # wait for engine to find the best move
+        lichess_engine.make_best_move()  # engine makes best move
+        time.sleep(1)  # wait for pieces to move
+        lichess_engine.get_board().update_board_state()  # update the engine board
+        analysis_last_move = lichess_engine.get_board().get_last_move()  # get the engine's last move
 
+    print("Puzzle completed2!") #https://lichess.org/training#Insert=puzzle%number #b6wRh
+    """
 
 
     time.sleep(1000)
