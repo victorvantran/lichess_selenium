@@ -1,0 +1,22 @@
+# lichess_selenium
+Automated testing of lichess.com using Selenium\
+\
+CASE Tools\
+• Selenium Chrome Webdriver\
+• Python 3\
+• Git\
+• PyCharm\
+• Visual Studio Code\
+• Chrome\
+\
+Tests:\
+• Puzzle Skim\
+• Signin/Signout & Preferences\
+• Watch Library\
+• Highlighted Tournaments\
+• Community & Store\
+• Super Puzzle\
+\
+[Presentation](https://docs.google.com/presentation/d/1ZypXDiX9J34VnnOF6mVHuqvyro2TPSnbfv6N53pA7s8/edit?usp=sharing)\
+\
+[Documentation](https://docs.google.com/document/d/17bs8y6sd8SQSeJhrFoRqXlOseZDi2MWtQWnor2Wv-Xc/edit?usp=sharing)
