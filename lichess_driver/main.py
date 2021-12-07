@@ -21,8 +21,7 @@ class WebTester:
     action = None
 
     def __init__(self):
-        #self.driver = webdriver.Chrome(service=SERVICE)
-        # Maybe fixes the errors of Checking Bluetooth and default browser
+        """ Initiate Selenium webdriver for Chrome """
         self.options = webdriver.ChromeOptions()
         self.options.add_experimental_option('excludeSwitches', ['enable-logging'])
         self.driver = webdriver.Chrome(service=SERVICE, options=self.options)
@@ -30,6 +29,7 @@ class WebTester:
         self.action = ActionChains(self.driver)
 
     def __del__(self):
+        """ Close the driver """
         self.driver.close()
 
     def chrome_window_maximize(self):
@@ -42,9 +42,21 @@ class WebTester:
         self.action.move_to_element(element)
         self.action.perform()
 
+    def hover_offset(self, xpath, x, y):
+        """ Hover over an element based on a given xpath """
+        element = self.driver.find_element(By.XPATH, xpath)
+        self.action.move_to_element_with_offset(element, x, y)
+        self.action.perform()
+
     def click_element(self, element):
         """ Click on an element based on a given element """
         self.action.move_to_element(element)
+        self.action.click()
+        self.action.perform()
+
+    def click_element_offset(self, element, x, y):
+        """ Click on an element based on a given element and offset """
+        self.action.move_to_element_with_offset(element, x, y)
         self.action.click()
         self.action.perform()
 
@@ -53,12 +65,18 @@ class WebTester:
         element = self.driver.find_element(By.XPATH, xpath)
         self.click_element(element)
 
+    def click_offset(self, xpath, x, y):
+        """ Click on an element based on a given xpath and offset """
+        element = self.driver.find_element(By.XPATH, xpath)
+        self.click_element_offset(element, x, y)
+
     def press_key(self, key):
         """ Press a key """
         self.action.send_keys(key)
         self.action.perform()
 
     def check_exists_by_xpath(self, xpath):
+        """ If the xpath exists, return True. Otherwise, return false """
         try:
             self.driver.find_element(By.XPATH, xpath)
         except NoSuchElementException:
@@ -79,13 +97,24 @@ class WebTester:
 class LichessBoard:
     xpath = None
     driver = None
-    state = dict()
+    state = None
+    action = None
 
+    piece_abbreviation = {
+        'pawn': '',
+        'knight': 'N',
+        'bishop': 'B',
+        'rook': 'R',
+        'queen': 'Q',
+        'king': 'K'
+    }
 
-    def __init__(self, driver, xpath):
+    def __init__(self, driver, action, xpath):
         super().__init__()
         self.driver = driver
+        self.action = action
         self.xpath = xpath
+        self.state = dict()
 
     def get_board_orientation(self):
         board_properties = self.driver.find_element(By.XPATH, self.xpath.get("orientation")).get_property("classList")
@@ -101,59 +130,122 @@ class LichessBoard:
 
     def get_board_pixel_size(self):
         """ Return the width x height of the board in pixels """
-        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("pixel_size"))
+        board_size_element = self.driver.find_element(By.XPATH, self.xpath.get("container"))
         return [board_size_element.get_property("clientWidth"), board_size_element.get_property("clientHeight")]
 
+    def get_num_ranks(self):
+        """ Return the number of ranks of the chess board (rows) """
+        ranks_element = self.driver.find_element(By.XPATH, self.xpath.get("ranks"))
+        return ranks_element.get_property("childElementCount")
+
+    def get_num_files(self):
+        """ Return the number of files of the chess board (columns) """
+        files_element = self.driver.find_element(By.XPATH, self.xpath.get("files"))
+        return files_element.get_property("childElementCount")
+
+    def get_file_pixel_size(self):
+        """ Return the width of an individual file as an integer using floor division """
+        return self.get_board_pixel_size()[0]//self.get_num_files()
+
+    def get_rank_pixel_size(self):
+        """ Return the height of an individual rank as an integer using floor division """
+        return self.get_board_pixel_size()[1]//self.get_num_ranks()
+
     def get_square_pixel_size(self):
+        """ """
         board_pixel_size = self.get_board_pixel_size()
-        return [board_pixel_size[0]/8, board_pixel_size[1]/8]
+        return [board_pixel_size[0]/8, board_pixel_size[1]/8] # [!] div get_num_files, ranks
 
     def get_last_move(self):
         # Note: A better way would be to use linked-list property of web elements to get the corresponding nodes
         piece = ""
         last_move0 = ""
         last_move1 = ""
+        print(self.state)
         for key, val in self.state.items():
             if (str(key) == "last-move0"):
-                print(val)
-                piece = str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
-                last_move0 = str(val.get_property("cgKey"))
+                piece = ""  # str(self.state[val.get_property("cgKey")].get_property("cgPiece"))
+                last_move0 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
             elif (str(key) == "last-move1"):
-                last_move1 = str(val.get_property("cgKey"))
+                last_move1 = (val.get_property("cgKey")[0], int(val.get_property("cgKey")[1:]))
 
-        return piece + last_move1 + last_move0
-
-
-
+        return [piece, last_move1, last_move0]
 
     def get_board_state(self):
         return self.state
 
     def update_board_state(self):
         """ The board state is a dictionary mapping position to web element (square/piece)"""
+        print(id(self.state))
         self.state.clear()
         cg_board = self.get_cg_board()
         cg_board_properties = cg_board.get_property("childNodes")
         last_move = ""
         last_move_found = 0
         for cell in cg_board_properties:
-            if (cell.get_property("className") == "last-move"):
+            # if (cell.get_property("className") == "last-move"):
+            if (cell.get_attribute("class") == "last-move"):
                 self.state["last-move" + str(last_move_found)] = cell
                 last_move_found += 1
-            else:
+            elif (cell.get_property("localName") == "piece"):
                 self.state[str(cell.get_property("cgKey"))] = cell
 
+    def print_board_state(self):
         for key, value in self.state.items():
             print(key, " : ", value)
 
 
+    def make_move(self, start_move, end_move):
+        """
+        :param start_move, end_move: [file, rank]    a4  a5
+        :return: None
+        """
+        orientation = self.get_board_orientation()
+        board_element = self.get_cg_board()
 
+        file_pixel_size = self.get_file_pixel_size()
+        rank_pixel_size = self.get_rank_pixel_size()
+
+        num_files = self.get_num_files()
+        num_ranks = self.get_num_ranks()
+
+        start_file_index = ord(start_move[0]) - ord('a')
+        start_rank_index = start_move[1] - 1
+        end_file_index = ord(end_move[0]) - ord('a')
+        end_rank_index = end_move[1] - 1
+
+        if orientation == "orientation-white":
+            start_file_pixel_offset = file_pixel_size//2 + start_file_index*file_pixel_size
+            start_rank_pixel_offset = rank_pixel_size//2 + (num_ranks - start_rank_index - 1)*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, start_file_pixel_offset, start_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+
+            end_file_pixel_offset = file_pixel_size//2 + end_file_index*file_pixel_size
+            end_rank_pixel_offset = rank_pixel_size//2 + (num_ranks - end_rank_index - 1)*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, end_file_pixel_offset, end_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+            pass
+        elif orientation == "orientation-black":
+            start_file_pixel_offset = file_pixel_size//2 + (num_files - start_file_index - 1)*file_pixel_size
+            start_rank_pixel_offset = rank_pixel_size//2 + start_rank_index*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, start_file_pixel_offset, start_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
+
+            end_file_pixel_offset = file_pixel_size//2 + (num_files - end_file_index - 1)*file_pixel_size
+            end_rank_pixel_offset = rank_pixel_size//2 + end_rank_index*rank_pixel_size
+            self.action.move_to_element_with_offset(board_element, end_file_pixel_offset, end_rank_pixel_offset)
+            self.action.click()
+            self.action.perform()
 
 
 class LichessTester(WebTester):
     url = "https://lichess.org"
     xpath = {
-        "puzzles"                   : "//a[@href='/training']",
+        "puzzles"                   : "//a[@href='/training']", \
+        # specify the element by multiple identifiers, separated by '//'
         "dashboard"                 : "//a[@href='/training/dashboard/30']",
         "streak"                    : "//a[@href='/streak']",
         "storm"                     : "//a[@href='/storm']",
@@ -184,22 +276,25 @@ class LichessTester(WebTester):
         "signout"                   : "//*[@id=\"dasher_app\"]/div/div[1]/form/button",
         "username_email_form"       : "//*[@id=\"form3-username\"]",
         "password_form"             : "//*[@id=\"form3-password\"]",   
-        "signin_signin"             : "//*[@id=\"main-wrap\"]/main/form/div[1]/button", \
-        # specify the element by multiple identifiers, separated by '//'
+        "signin_signin"             : "//*[@id=\"main-wrap\"]/main/form/div[1]/button",
         "puzzles_moves_table"       : "//*[@id=\"main-wrap\"]/ main/div[2]/div[2]/div",
     }
 
     puzzles_board_xpath = {
-        "pixel_size": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
+        "container": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container",
         "orientation": "//*[@id=\"main-wrap\"]/main/div[1]/div",
-        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board"
+        "state": "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/cg-board",
+        "ranks" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[1]",
+        "files" : "//*[@id=\"main-wrap\"]/main/div[1]/div/cg-container/coords[2]",
+        "success" : "//*[@id=\"main-wrap\"]/main/div[2]/div[3]/div[1]"
     }
 
     board = None
 
     def __init__(self):
+        """ Initiate LichessTester and setup the board """
         super().__init__()
-        self.board = LichessBoard(self.driver, self.puzzles_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.puzzles_board_xpath)
 
     def open_website(self):
         """ Open a website given a URL """
@@ -259,18 +354,6 @@ class LichessTester(WebTester):
             self.driver.switch_to.window(self.driver.window_handles[0])
         else:
             pass
-        
-
-
-    # def click_tournament_player(self, index):
-    #     """ Click on the tournament participant """
-    #     self.hover(self.xpath.get("tournament_player" + str(index)))
-    #     self.click(self.xpath.get("tournament_player" + str(index)))
-
-    # def click_close_tournament_player(self):
-    #     """ Close the tournament participant's information """
-    #     self.hover(self.xpath.get("close_tournament_player"))
-    #     self.click(self.xpath.get("close_tournament_player"))
 
     def click_watch_video_library(self):
         """ Click on the Video library button under the Watch tab """
@@ -405,12 +488,10 @@ class LichessTester(WebTester):
         return pgn
 
 
-    def make_move(self, move):
-        """
-        :param move: string that is a move
-        :return: None
-        """
-        pass
+    def puzzle_success(self):
+        """ Returns true if the success element of the puzzle page is found,
+         indicating a successful puzzle completion """
+        return len(self.driver.find_elements(By.CLASS_NAME, "complete")) > 0
 
 
 class LichessEngine(WebTester):
@@ -419,6 +500,7 @@ class LichessEngine(WebTester):
         "suggested_moves"   : "//*[@id=\"main-wrap\"]/main/div[3]/div[2]/div",
         "pgn_bar"           : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]",
         "pgn_button"        : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/button",
+        "pgn_text"          : "//*[@id=\"main-wrap\"]/main/div[5]/div/div[2]/div/textarea",
         "state"             : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]/cg-container/cg-board",
         "board_orientation" : "//*[@id=\"main-wrap\"]/main/div[1]/div[3]"
     }
@@ -435,7 +517,7 @@ class LichessEngine(WebTester):
 
     def __init__(self):
         super().__init__()
-        self.board = LichessBoard(self.driver, self.analysis_board_xpath)
+        self.board = LichessBoard(self.driver, self.action, self.analysis_board_xpath)
 
     def open_website(self):
         """ Open a website given a URL """
@@ -454,7 +536,7 @@ class LichessEngine(WebTester):
         self.action.perform()
 
     def update_pgn(self, next_move):
-        """ Concatinates to the pgn """
+        """ Concatenate to the pgn """
         pgn_text = self.driver.find_element(By.XPATH, self.xpath.get("pgn_text"))
         pgn_text.send_keys(" " + next_move)
         self.action.perform()
