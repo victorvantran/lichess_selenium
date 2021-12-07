@@ -639,6 +639,7 @@ if __name__ == '__main__':
     time.sleep(1)
     lichess_website_tester.click_puzzles()
     lichess_website_tester.driver.set_window_size(lichess_website_tester.window_size['width']/2, lichess_website_tester.window_size['height'])
+    lichess_website_tester.driver.set_window_position(0, 0)
 
     #initiate analysis webpage
     lichess_engine = LichessEngine()
