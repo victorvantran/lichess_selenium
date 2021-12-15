@@ -21,7 +21,7 @@ Tests:\
 • Community & Store\
 • Super Puzzle\
 \
-<img src="add_content/super_puzzles_gif.gif" width="500em" />\
+<img src="add_content/super_puzzles_gif.gif" width="800em" />\
 \
 [Presentation](https://docs.google.com/presentation/d/1ZypXDiX9J34VnnOF6mVHuqvyro2TPSnbfv6N53pA7s8/edit?usp=sharing)\
 \
