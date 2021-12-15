@@ -19,7 +19,7 @@ Tests:\
 • Watch Library\
 • Highlighted Tournaments\
 • Community & Store\
-• Super Puzzle\
+• Super Puzzles\
 \
 <img src="add_content/super_puzzles_gif.gif" />\
 \

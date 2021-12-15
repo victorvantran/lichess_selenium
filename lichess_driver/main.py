@@ -634,7 +634,7 @@ if __name__ == '__main__':
 
     # Only able to run single test case.
     # Comment out other tests.
-    # Super Puzzle Test: Lines 647-667
+    # Super Puzzles Test: Lines 647-667
     # Spotlight Tournaments Test: Lines 671-679
     # Watch Library Test: Lines 683-701
     # Puzzles Test: Lines 705-721
@@ -643,7 +643,7 @@ if __name__ == '__main__':
 
 
 
-    """ Super Puzzle Test """
+    """ Super Puzzles Test """
 
     #initiate puzzle webpage
     lichess_website_tester = LichessTester()

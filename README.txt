@@ -19,7 +19,7 @@ Tests:
 • Watch Library
 • Highlighted Tournaments
 • Community & Store
-• Super Puzzle
+• Super Puzzles
 
 [Presentation](https://docs.google.com/presentation/d/1ZypXDiX9J34VnnOF6mVHuqvyro2TPSnbfv6N53pA7s8/edit?usp=sharing)
 
