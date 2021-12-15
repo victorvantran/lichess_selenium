@@ -632,6 +632,19 @@ def play(lichess_website_tester, lichess_engine):
 
 if __name__ == '__main__':
 
+    # Only able to run single test case.
+    # Comment out other tests.
+    # Super Puzzle Test: Lines 647-667
+    # Spotlight Tournaments Test: Lines 671-679
+    # Watch Library Test: Lines 683-701
+    # Puzzles Test: Lines 705-721
+    # Signin & Signout Test: Lines 725-743
+    # Community, Forum, Blog, Swag Test: Lines 747-759
+
+
+
+    """ Super Puzzle Test """
+
     #initiate puzzle webpage
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
@@ -650,8 +663,8 @@ if __name__ == '__main__':
     for _ in range(0, 1000):
         play(lichess_website_tester, lichess_engine)
 
-
     time.sleep(1000)
+
 
 
     """ Spotlighted Tournaments Test """
@@ -664,6 +677,7 @@ if __name__ == '__main__':
     lichess_website_tester.click_home()
     time.sleep(2)
     """
+
 
     """ Watch Library Test """
     """
@@ -687,10 +701,7 @@ if __name__ == '__main__':
     """
 
 
-
-
-
-    """ Search bar """
+    """ Puzzles Test """
     """
     lichess_tester = LichessTester()
     lichess_tester.open_website()
@@ -708,6 +719,7 @@ if __name__ == '__main__':
     lichess_tester.search("Hello, world!")
     time.sleep(10)
     """
+
 
     """ Signin & Signout Test """
     """
@@ -730,7 +742,8 @@ if __name__ == '__main__':
     time.sleep(4)
     """
 
-    """Community, Forum, Blog, Swag Test"""
+
+    """ Community, Forum, Blog, Swag Test """
     """
     lichess_website_tester = LichessTester()
     lichess_website_tester.open_website()
