@@ -1,3 +1,8 @@
+# Lichess.org Testing with Selenium
+# Christopher Ta				|   cta002@csu.fullerton.edu
+# Brian Tan 				    |   brian388@csu.fullerton.edu
+# Victor Tran				    |   victorvantran@csu.fullerton.edu
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys  # Gives access to input keys to interface with the website
@@ -634,12 +639,12 @@ if __name__ == '__main__':
 
     # Only able to run single test case.
     # Comment out other tests.
-    # Super Puzzles Test: Lines 647-667
-    # Spotlight Tournaments Test: Lines 671-679
-    # Watch Library Test: Lines 683-701
-    # Puzzles Test: Lines 705-721
-    # Signin & Signout Test: Lines 725-743
-    # Community, Forum, Blog, Swag Test: Lines 747-759
+    # Super Puzzles Test: Lines 652-672
+    # Spotlight Tournaments Test: Lines 671-684
+    # Watch Library Test: Lines 688-706
+    # Puzzles Test: Lines 710-726
+    # Signin & Signout Test: Lines 730-748
+    # Community, Forum, Blog, Swag Test: Lines 752-764
 
 
 
@@ -757,44 +762,3 @@ if __name__ == '__main__':
     lichess_website_tester.click_swag()
     time.sleep(4)
     """
-
-
-"""
-SUBMENU CLICK
-# https://www.tutorialspoint.com/how-can-i-perform-mouse-hover-action-in-selenium-python
-action = ActionChains(self.driver)
-# identify element
-element = self.driver.find_element(By.XPATH, "//a[@href='/training']")
-# hover over element
-action.move_to_element(element).perform()
-# identify sub menu element
-sub_element = self.driver.find_element(By.XPATH, "//a[@href='/racer']")
-# hover over element and click
-action.move_to_element(sub_element).click().perform()
-"""
-
-
-# /html/body/div[1]/main/div[1]/div[3]/cg-container/cg-board
-
-#iterate till find 'black' or 'white'
-
-#https://lichess.org/forum/lichess-feedback/play-by-typing-san-moves-like-e4-nf3-or-qxd6
-
-
-# To translate pieces to position need to consider:
-# board flip position   | # //*[@id="main-wrap"]/main/div[1]/div .get_property("innerText") == black/white
-# board size            |
-# piece position        |
-
-
-
-#1) Every time a higher ranking pieces moves, a capital prefix is apparent
-#2) Pawns have no capital prefix
-#3) If multiple pieces can enter a square, the piece to enter the square is specified by the file and x
-
-
-# Just use last move information
-
-
-# After getting best move, make it. Then record the previous move to get c1n1c2n2
-# After making the best move, wait for computer response. Then record c1n1c2n2
